@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link rel="stylesheet" type="text/css" href="../css/mui.min.css" />
+		<link rel="stylesheet" type="text/css" href="../css/header.css" />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav title">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left" style="color: white;"></a>
+			<a id="openMenu" class="mui-icon mui-icon-right-nav mui-pull-right" style="color: white;">...</a>
+			<h1 class="mui-title title-color">个人头像</h1>
+		</header>
+		<div class="mui-content">
+			<img id="img_my_face" src="../image/face-default-cat.png" style="margin-top:72px;">
+		</div>
+		<div id="sheet_myface" class="mui-popover mui-popover-bottom mui-popover-action ">
+			<!-- 可选择菜单 -->
+			<ul class="mui-table-view">
+				<li class="mui-table-view-cell">
+					<a id="link_chooseImg" href="#">选择照片</a>
+				</li>
+				<li class="mui-table-view-cell">
+					<a id="link_saveImg" href="#">下载照片</a>
+				</li>
+			</ul>
+			<!-- 取消菜单 -->
+			<ul class="mui-table-view">
+				<li class="mui-table-view-cell">
+					<a href="#sheet_myface"><b>取消</b></a>
+				</li>
+			</ul>
+		</div>
+		<!-- 		<a href="#sheet" id="openSheet" class="mui-btn mui-btn-primary mui-btn-block">打开操作表</a> -->
+
+
+		<script src="../js/app.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/mui.min.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			mui.init()
+
+			mui.plusReady(function() {
+				/*
+				//TypeError: Cannot read property 'length' of null
+				 plus.key.addEventListener('backbutton',function(){
+					 console.log("监听返回按钮")
+					 plus.webview.currentWebview().close();
+					 });
+					  */
+				/* 				var oldback = mui.back; */
+				mui.back = function() {
+					// 要是返回不需要刷新的话，可以不要这句
+					//加上了 报这个东西TypeError: Cannot read property 'length' of null
+					/* oldback(); */
+					plus.webview.currentWebview().close();
+				}
+
+				refreshUserFace()
+
+				//获取手机端课件屏幕的宽度
+				var imgWidth = document.body.clientWidth;
+				img_my_face.width = imgWidth;
+				img_my_face.height = imgWidth;
+
+				//绑定选择菜单
+				var link_chooseImg = document.getElementById("link_chooseImg");
+				link_chooseImg.addEventListener("tap", function() {
+					// mui.openWindow("/plugin/v3.1.6/myface-uploader.html","myface-uploader.html");
+					mui.openWindow({
+						url: "/plugin/v3.1.6/myface-uploader.html",
+						id: "myface-uploader.html",
+						createNew: true
+					})
+
+
+					mui('#sheet_myface').popover('toggle');
+				})
+
+				//绑定选择图片按钮
+				var link_saveImg = document.getElementById("link_saveImg");
+				link_saveImg.addEventListener("tap", function() {
+
+					var user = app.getUserGlobalInfo();
+					var faceImage = user.faceImageBig;
+					if (app.isNotNull(faceImage)) {
+						plus.nativeUI.closeWaiting("下载中...");
+
+						var dtast = plus.downloader.createDownload(
+							app.imgServerUrl + faceImage, {},
+							function(downloadFile, status) {
+								//下载回调函数
+								plus.nativeUI.closeWaiting();
+								if (status == 200) {
+									//临时文件
+									var tempFile = downloadFile.filename;
+
+									//通过相册api保存照片到本地相册
+									plus.gallery.save(tempFile, function() {
+										app.showToast("保存头像成功", "success");
+									})
+
+								} else {
+									app.showToast("下载失败！", "error");
+								}
+							}
+						)
+					
+					} else {
+						app.showToast("头像获取失败！", "error");
+					}
+					dtast.start(); 
+
+						mui('#sheet_myface').popover('toggle');
+				});
+
+				//绑定下载图片按钮
+				var openMenu = document.getElementById("openMenu");
+				openMenu.addEventListener("tap", function() {
+					mui('#sheet_myface').popover('toggle');
+				})
+
+				//添加自定义时间.刷新头像
+				window.addEventListener("refresh", function() {
+					console.log('自定义事件')
+					refreshUserFace();
+				});
+
+			})
+
+			function refreshUserFace() {
+				var user = app.getUserGlobalInfo();
+				var img_my_face = document.getElementById("img_my_face");
+				if (user != null) {
+					var faceImage = user.faceImageBig;
+					if (app.isNotNull(faceImage)) {
+						img_my_face.src = app.imgServerUrl + faceImage;
+					}
+
+				}
+			}
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,156 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link rel="stylesheet" type="text/css" href="../css/mui.min.css" />
+	</head>
+
+	<body>
+		<div class="mui-content">
+			<ul class="mui-table-view">
+				<li id="link_myface" class="mui-table-view-cell mui-media">
+					<a href="javascript:;">
+						<span class="mui-pull-right mui-icon mui-icon-arrowright" style="line-height: 42px;color: lightgray;margin-left: 3px;">
+						</span>
+						<img id="img_my_face" class="mui-media-object mui-pull-right" src="../css/registLogin/arrow.jpg">
+						<div class="mui-media-body" style="line-height: 42px;">
+							头像
+						</div>
+					</a>
+				</li>
+				<li  id="link_mynick" class="mui-table-view-cell mui-media">
+					<a href="javascript:;">
+						<span class="mui-pull-right mui-icon mui-icon-arrowright" style="color: lightgray; margin-left: 3px;"></span>
+						<span id="span_nickname" class="mui-pull-right" style="color: gray; font-size: 14px;">
+							123456
+						</span>
+						<div class="mui-media-body">
+							昵称
+						</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;">
+						<span id="span_username" class="mui-pull-right" style="color: gray; font-size: 14px;">
+							635775605
+						</span>
+						<div class="mui-media-body">
+							米信号
+						</div>
+					</a>
+				</li>
+				<li id="link_myqrcode" class="mui-table-view-cell mui-media">
+					<a href="javascript:;">
+						<span class="mui-pull-right mui-icon mui-icon-arrowright" style="color: lightgray;margin-left: 3px;">
+						</span>
+						<img class="mui-media-object mui-pull-right" src="../image/qrcode.png" style="max-width: 20px;height: 20px;">
+						<div class="mui-media-body">
+							二维码名片
+						</div>
+					</a>
+				</li>
+			</ul>
+
+			<br>
+
+			<ul class="mui-table-view">
+				<li id="exitapp" class="mui-table-view-cell mui-media" style="text-align: center;">
+					<a href="javascript:;">
+						<div class="mui-media-body">
+							退出登录
+						</div>
+					</a>
+				</li>
+			</ul>
+
+		</div>
+
+		<script src="../js/mui.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/app.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			mui.init({
+				keyEventBind: {
+					backbutton: false,
+					menubutton: true
+				}
+			});
+			/* 加载完毕 */
+			mui.plusReady(function() {
+
+				//获取当前窗口的weview,刷新当前用户的信息
+				var meWebview = plus.webview.currentWebview();
+				meWebview.addEventListener("show", function() {
+				
+					refreshUserInfo();
+				});
+				
+				//退出登录 清空缓存 跳转到登录页面
+				var exitapp = document.getElementById("exitapp");
+				exitapp.addEventListener("tap",function(){
+					app.setUserGlobalInfo(null);
+					app.setContactList(null);
+					
+					var lemon_chatlist = plus.webview.getWebviewById("lemon-chatlist.html");
+					mui.fire(lemon_chatlist, "WsCleanInterval");
+					
+					 mui.openWindow("/login.html","login.html") 
+				});
+				
+				
+				//页面跳转 我的昵称
+				var linkmynick = document.getElementById("link_mynick");
+				linkmynick.addEventListener("tap",function(){
+					mui.openWindow("mynickname.html","mynickname.html")
+				});				
+				
+				//页面跳转 我的头像
+				var linkmyface = document.getElementById("link_myface");
+				linkmyface.addEventListener("tap",function(){
+					mui.openWindow("myface.html","myface.html")
+				});
+				
+				//添加自定义事件.刷新头像
+				window.addEventListener("refresh",function(){
+					refreshUserInfo();
+				});
+				
+				//页面跳转 我的头像
+				var link_myqrcode = document.getElementById("link_myqrcode");
+				link_myqrcode.addEventListener("tap",function(){
+					mui.openWindow("myQRCode.html","myQRCode.html")
+				});
+				
+			});
+
+			//获取全局用户信息 然后刷新到界面中
+			function refreshUserInfo() {
+				var user = app.getUserGlobalInfo();
+				/*  {"id":"181024109K5BKT7C","username":"123","faceImage":"","faceImageBig":"","nickname":"123","qrcode":""} */
+				console.log(JSON.stringify(user));
+				if (user != null) {
+					var faceImage = user.faceImage;
+					var nickname = user.nickname;
+					var username = user.username;
+					var qrcode = user.qrcode;
+					//获取dom	
+					var span_nickname = document.getElementById("span_nickname");
+					var span_username = document.getElementById("span_username");
+					//赋值
+					span_nickname.innerHTML = nickname;
+					span_username.innerHTML = username;
+					//设置头像
+					if (app.isNotNull(faceImage)) {
+						var img_my_face = document.getElementById("img_my_face");
+						img_my_face.src = app.imgServerUrl + faceImage;
+					}
+
+				}
+
+			}
+		</script>
+	</body>
+
+</html>
