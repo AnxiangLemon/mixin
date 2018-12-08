@@ -11,7 +11,7 @@
 	<body>
 		<div class="mui-content">
 			<ul class="mui-table-view">
-				<li class="mui-table-view-cell mui-media">					
+				<li id="circleOfFriends" class="mui-table-view-cell mui-media">					
 						<img class="mui-media-object mui-pull-left" 
 						src="../image/friends.png"
 						style="max-width: 24px;height: 24px;">	
@@ -62,6 +62,15 @@
 			
 			mui.plusReady(function(){
 				
+				var circleOfFriends = document.getElementById("circleOfFriends");
+				circleOfFriends.addEventListener("tap",function(){
+					mui.openWindow({
+						url: "im-chat.html",
+						id: "im-chat.html"
+						
+					});
+					
+				});
 				
 				var btn_scanme = document.getElementById("btn_scanme");
 				btn_scanme.addEventListener("tap",function(){

@@ -1,26 +1,13 @@
 <!DOCTYPE html>
 <html>
-
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
-		<title></title>
+		<title>米信聊天</title>
 		<link href="../css/mui.min.css" rel="stylesheet" />
 		<link rel="stylesheet" type="text/css" href="../css/header.css" />
-		<link rel="stylesheet" type="text/css" href="../css/chat.css" />
-		<link rel="stylesheet" type="text/css" href="../css/suofangphone.css" />
-
-		<style>
-			html,
-			body {
-				height: 100%;
-				margin: 0px;
-				padding: 0px;
-				overflow: hidden;
-				-webkit-touch-callout: none;
-				-webkit-user-select: none;
-			}
-			</style>
+		<link href="../css/mui.imageviewer.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../css/imchat.css" />
 
 	</head>
 
@@ -28,284 +15,558 @@
 
 		<header class="mui-bar mui-bar-nav title" style="position: fixed;">
 			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left title-color"></a>
-			<h1 class="mui-title title-color"><b id="chatting-nickname">米信</b></h1>
+			<h1 class="mui-title title-color"><b id="chatting-nickname">聊天</b></h1>
 		</header>
 
+		<pre id='h'></pre>
 
-		<div id="msg-outter" class="mui-content">
-			<div id='msg'>
-
-				<!-- <div class="friend_lists">				下次发送语音和图片消息~~文件的在等多久 ...
-						<img   class="header_img" src="../plugin/cropper/images/picture.jpg" width="40px" height="40px" />
-					<div class="msg-wrapper right">
-						<p class="msg-left-white">
-							晚上过<br />电灯胆饭？</p>
+		<script id='msg-template' type="text/template">
+			<% for(var i in record){ var item=record[i]; %>
+				<div class="msg-item <%= (item.flag == 1 ?' msg-item-self':'') %>" msg-type='<%=(item.type)%>' msg-content='<%=(item.msg)%>'>
+					<% if(item.flag == 1 ) { %>
+						<!-- <i class="msg-user mui-icon mui-icon-person"></i> -->
+						<img class="msg-user" src="<%=(myImg)%>" alt="" />
+					<% } else { %>
+						<img class="msg-user-img" src="<%=(friendImg)%>" alt="" />
+					<% } %>
+					<div class="msg-content">
+						<div class="msg-content-inner">
+							<% if(item.type=='text' ) { %>
+								<%=( item.msg|| '&nbsp;&nbsp;') %>
+							<% } else if(item.type=='image' ) { %>
+								<img class="msg-content-image" src="<%=(item.msg)%>" style="max-width: 100px;" />
+							<% } else if(item.type=='sound' ) { %>
+								<span class="mui-icon mui-icon-mic" style="font-size: 18px;font-weight: bold;"></span>
+								<span class="play-state">点击播放</span>
+							<% } %>
+						</div>
+						<div class="msg-content-arrow"></div>
 					</div>
+					<div class="mui-item-clear"></div>
 				</div>
+			<% } %>
+		</script>
 
-				<div class="me_lists">
-			
-					<div class="header_img">
-						<img src="../image/friends.png" width="40px" height="40px" />
-					</div>
-					<div class="msg-wrapper left">
-						
-						<p class="msg-right-green">
-							<img src="../image/friends.png" width="80px" height="80px" data-preview-src="" data-preview-group="1" />
-					123456
-							</p>
-					</div>
-				</div> -->
-
+		<div class="mui-content">
+			<div id='msg-list'>
 			</div>
 		</div>
 
 		<footer>
-			
-			<label  class="footer-left">
-				<button id="recorder" type="button" class="mui-btn mui-btn-blue  mui-icon mui-icon-plusempty"></button>
-			</label>
-			<div class="footer-center">
-				<textarea id='msg-text' type="text" class='input-text'></textarea>
+			<div class="footer-left">
+				<i id='msg-image' class="mui-icon mui-icon-camera" style="font-size: 28px;"></i>
 			</div>
-			<label  class="footer-right">
-						<button type="button" class="mui-btn mui-btn-gray" id="send">发送</button>
+			<div class="footer-center">
+				<textarea id='msg-text' type="text" class='input-text' autofocus="autofocus"></textarea>
+				<button id='msg-sound' type="button" class='input-sound' style="display: none;">按住说话</button>
+			</div>
+			<label for="" class="footer-right">
+				<i id='msg-type' class="mui-icon mui-icon-mic"></i>
 			</label>
 		</footer>
 
+
+
+		<div id='sound-alert' class="rprogress">
+			<div class="rschedule"></div>
+			<div class="r-sigh">!</div>
+			<div id="audio_tips" class="rsalert">手指上滑，取消发送</div>
+		</div>
 		<script src="../js/mui.min.js"></script>
-		<script src="../js/mui.previewimage.js" type="text/javascript" charset="utf-8"></script>
-		<script src="../js/mui.zoom.js" type="text/javascript" charset="utf-8"></script>
-
-		<script type="application/javascript" src="../js/app.js"></script>
-		<script type="text/javascript">
-			// 创建命名空间，只需要把自己的代码，写进入，那么外部就无法访问
-			//			(function($, doc){
-
+		<script src="../js/mui.imageViewer.js"></script>
+		<script src="../js/arttmpl.js"></script>
+		<script src="../js/app.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" charset="utf-8">
 			// 获取上一个页面传入的好友属性值
 			var friendUserId;
 			var friendNickname;
 			var friendFaceImage;
 
 
-			mui.previewImage();
-			mui.plusReady(function() {
-
-				// 获取我自己的用户信息					
-				var me = app.getUserGlobalInfo();
-
-				// 获取聊天页面webview
-				var chattingWebview = plus.webview.currentWebview();
-				// 设置聊天页面的软键盘样式
-				chattingWebview.setStyle({
-					softinputMode: "adjustResize"
-				});
-
-				// 获取上一个页面传入的好友属性值
-				friendUserId = chattingWebview.friendUserId;
-				friendNickname = chattingWebview.friendNickname;
-				friendFaceImage = chattingWebview.friendFaceImage;
-
-				// 标题改为朋友的昵称
-				document.getElementById("chatting-nickname").innerHTML = friendNickname;
-
-
-				// 渲染初始化的聊天记录HTML
-				initChatHistory();
-
-				var areaMsgList = document.getElementById("msg");
-				// 设置聊天记录进入页面的时候自动滚动到最后一条
-				areaMsgList.scrollTop = areaMsgList.scrollHeight + areaMsgList.offsetHeight;
-
-				// 获取dom控件
-				var msg_text = document.getElementById("msg-text");
-				var send = document.getElementById("send");
-
-				// 监听用户输入，使得send按钮变色
-				msg_text.addEventListener("input", function() {
-					var msg_text_val = msg_text.value;
-					if (msg_text_val.length > 0) {
-						send.setAttribute("class", "mui-btn-green");
-					} else {
-						send.setAttribute("class", "mui-btn-gray");
+			(function(mui, doc) {
+				var MIN_SOUND_TIME = 800;
+				mui.init({
+					gestureConfig: {
+						tap: true, //默认为true
+						doubletap: true, //默认为false
+						longtap: true, //默认为false
+						swipe: true, //默认为true
+						drag: true, //默认为true
+						hold: true, //默认为false，不监听
+						release: true //默认为false，不监听
 					}
 				});
 
-				// 对当前的窗口监听resize事件
-				window.addEventListener("resize", function() {
-					resizeScreen();
-					document.getElementById("msg-outter").style.paddingBottom = "50px";
-				});
+				//true 表示原样输出html标签  false 表示为HTML代码
+				template.config('escape', false);
 
+				if (mui.os.ios) {
+					// 解决在ios上fixed元素focusin时位置出现错误的问题 
+					document.addEventListener('DOMContentLoaded', function() {
+						var footerDom = document.querySelector('footer');
 
-
-				// 发送消息按钮的事件绑定
-				send.addEventListener("tap", function() {
-
-					// 发送之前判断网络的状态
-					var connectionStatus = plus.networkinfo.getCurrentType();
-					if (connectionStatus == 0 || connectionStatus == 1) {
-						app.showToast("请打开网络连接...", "error");
-						return;
-					}
-
-					// 获取消息内容
-					var msg_text_val = app.ThTsStr(msg_text.value);
-
-					// 判断消息内容，如果长度等于0，则return
-					if (msg_text_val.length === 0) {
-						return;
-					} else if (msg_text_val.length > 16000) {
-						app.showToast("消息太长，请分段发送！", "error");
-						return;
-					}
-
-					// 发送消息, 渲染消息的html到msg div之下
-					sendMsg(app.imgServerUrl + me.faceImage, msg_text_val);
-					// 情况消息文本框中的内容
-					msg_text.value = "";
-					// 发送消息完毕之后，把发送按钮的颜色改为灰白色
-					send.setAttribute("class", "mui-btn-gray");
-
-					// 构建ChatMsg
-					var chatMsg = new app.MixinMsg(me.id, friendUserId, msg_text_val, null);
-					// 构建DataContent
-					var dataContent = new app.DataContent(app.CHAT, chatMsg, null);
-
-					// 调用websocket 发送消息到netty后端
-					var wsWebview = plus.webview.getWebviewById("lemon-chatlist.html");
-
-					wsWebview.evalJS("CHAT.chat('" + JSON.stringify(dataContent) + "')");
-					//						wsWebview.evalJS("CHAT.chat('" + msg_text_val + "')");
-
-					// 保存聊天历史记录到本地缓存
-					app.saveUserChatHistory(me.id, friendUserId, msg_text_val, 1);
-					app.saveUserChatSnapshot(me.id, friendUserId, msg_text_val, true);
-					//						receiveMsg("模拟接受消息~~~~~~");
-				});
-			});
-
-			/**
-			 * 打开浏览器的窗口
-			 */
-			function afun(url) {
-				console.log(url.text);
-				plus.runtime.openURL(url.text);
-			}
-			// 接受消息
-			function receiveMsg(msg) {
-
-				var msgHtml = '<div class="friend_lists">' +
-					'<div class="header_img">' +
-					'<img src="' + app.imgServerUrl + friendFaceImage + '" width="40px" height="40px" />' +
-					'</div>' +
-					'<div class="msg-wrapper right">' +
-					'<p class="msg-left-white">' + msg + '</p>' +
-					'</div>' +
-					'</div>';
-
-				var msg_list = document.getElementById("msg");
-				msg_list.insertAdjacentHTML("beforeend", msgHtml);
-
-				//playReceiveMsgSound();
-			}
-
-			// 渲染发送消息
-			function sendMsg(faceImg, msg) {
-
-				var msgHtml = '<div class="me_lists">' +
-					'<div class="header_img">' +
-					'<img src="' + faceImg + '" width="40px" height="40px" />' +
-					'</div>' +
-					'<div class="msg-wrapper left">' +
-					'<p class="msg-right-green">' + msg + '</p>' +
-					'</div>' +
-					'</div>';
-				var msg_list = document.getElementById("msg");
-				msg_list.insertAdjacentHTML("beforeend", msgHtml);
-
-				playSendMsgSound();
-
-				// copyToClip();
-			}
-			/**
-			 * android复制文本
-			 * function copyToClip(){
-    var Context = plus.android.importClass("android.content.Context");
-    var main = plus.android.runtimeMainActivity();
-    var clip = main.getSystemService(Context.CLIPBOARD_SERVICE);
-    plus.android.invoke(clip,"setText","I'm copy from Native.js");
-}
-			 */
-
-
-			// 播放发送消息的铃声
-			function playSendMsgSound() {
-				var audioPlayer = plus.audio.createPlayer("/mp3/send.mp3");
-				audioPlayer.play();
-			}
-
-			// 播放接受消息的铃声
-			/* 	function playReceiveMsgSound() {
-					var audioPlayer = plus.audio.createPlayer("/mp3/di_didi.mp3");
-					audioPlayer.play();
-				} */
-
-			// 重新调整聊天窗口
-			function resizeScreen() {
-				var areaMsgList = document.getElementById("msg");
-				// 设置聊天记录进入页面的时候自动滚动到最后一条
-				areaMsgList.scrollTop = areaMsgList.scrollHeight + areaMsgList.offsetHeight;
-			};
-
-			//			}(mui, document));
-
-			// 初始化用户的聊天记录
-			function initChatHistory() {
-				var msg_list = document.getElementById("msg");
-
-				var me = app.getUserGlobalInfo();
-				var myId = me.id;
-				var myFaceImg = me.faceImage;
-
-				var chatHistoryList = app.getUserChatHistory(myId, friendUserId);
-
-				var togetherHTML = "";
-
-				for (var i = 0; i < chatHistoryList.length; i++) {
-					var singleMsg = chatHistoryList[i];
-
-					//	console.log(JSON.stringify(singleMsg));
-					var tmpmsg = app.TransferString(singleMsg.msg);
-					//	console.log( tmpmsg);
-
-					//singleMsg.msg.replace(/\n/g，"<br/>")
-					if (singleMsg.flag == 1) {
-						togetherHTML += '<div class="me_lists">' +
-							/* 		'<div class="time-left">2018-12-06 14:32</div>'+ */
-							'<div class="header_img">' +
-							'<img src="' + app.imgServerUrl + myFaceImg + '" width="40px" height="40px" />' +
-							'</div>' +
-							'<div class="msg-wrapper left">' +
-							'<p class="msg-right-green" >' + tmpmsg + '</p>' +
-							'</div>' +
-							'</div>';
-					} else {
-						togetherHTML += '<div class="friend_lists">' +
-
-							'<div class="header_img">' +
-							'<img src="' + app.imgServerUrl + friendFaceImage + '" width="40px" height="40px" />' +
-							'</div>' +
-							'<div class="msg-wrapper right" >' +
-							'<p class="msg-left-white" style="-webkit-user-select:all;">' + tmpmsg + '</p>' +
-							'</div>' +
-							'</div>';
-					}
+						document.addEventListener('focusin', function() {
+							footerDom.style.position = 'absolute';
+						});
+						document.addEventListener('focusout', function() {
+							footerDom.style.position = 'fixed';
+						});
+					});
 				}
-				msg_list.innerHTML = togetherHTML;
-			}
+
+
+				mui.plusReady(function() {
+					// 获取我自己的用户信息					
+					var me = app.getUserGlobalInfo();
+					console.log(JSON.stringify(me));
+
+
+					// 获取聊天页面webview
+					var chattingWebview = plus.webview.currentWebview();
+					// 设置聊天页面的软键盘样式
+					chattingWebview.setStyle({
+						softinputMode: "adjustResize"
+					});
+
+					// 获取上一个页面传入的好友属性值
+					friendUserId = chattingWebview.friendUserId;
+					friendNickname = chattingWebview.friendNickname;
+					friendFaceImage = chattingWebview.friendFaceImage;
+					// 标题改为朋友的昵称
+					document.getElementById("chatting-nickname").innerHTML = friendNickname;
+
+					/* 监听字符 */
+					var showKeyboard = function() {
+						if (mui.os.ios) {
+							var webView = plus.webview.currentWebview().nativeInstanceObject();
+							webView.plusCallMethod({
+								"setKeyboardDisplayRequiresUserAction": false
+							});
+						} else {
+							var Context = plus.android.importClass("android.content.Context");
+							var InputMethodManager = plus.android.importClass("android.view.inputmethod.InputMethodManager");
+							var main = plus.android.runtimeMainActivity();
+							var imm = main.getSystemService(Context.INPUT_METHOD_SERVICE);
+							imm.toggleSoftInput(0, InputMethodManager.SHOW_FORCED);
+							//var view = ((ViewGroup)main.findViewById(android.R.id.content)).getChildAt(0);
+							imm.showSoftInput(main.getWindow().getDecorView(), InputMethodManager.SHOW_IMPLICIT);
+
+						}
+					};
+
+
+					var doc = document;
+					//获取dom节点
+					var ui = {
+						body: doc.querySelector('body'),
+						footer: doc.querySelector('footer'),
+						footerRight: doc.querySelector('.footer-right'),
+						footerLeft: doc.querySelector('.footer-left'),
+						btnMsgType: doc.querySelector('#msg-type'),
+						boxMsgText: doc.querySelector('#msg-text'),
+						boxMsgSound: doc.querySelector('#msg-sound'),
+						btnMsgImage: doc.querySelector('#msg-image'),
+						areaMsgList: doc.querySelector('#msg-list'),
+						boxSoundAlert: doc.querySelector('#sound-alert'),
+						h: doc.querySelector('#h'),
+						content: doc.querySelector('.mui-content')
+					};
+
+					//设置消息框宽度啊
+					ui.h.style.width = ui.boxMsgText.offsetWidth + 'px';
+					//alert(ui.boxMsgText.offsetWidth );
+					var footerPadding = ui.footer.offsetHeight - ui.boxMsgText.offsetHeight;
+
+					var msgItemTap = function(msgItem, event) {
+						var msgType = msgItem.getAttribute('msg-type');
+						var msgContent = msgItem.getAttribute('msg-content')
+						if (msgType == 'sound') {
+							player = plus.audio.createPlayer(msgContent);
+							var playState = msgItem.querySelector('.play-state');
+							playState.innerText = '正在播放...';
+
+							player.play(function() {
+								playState.innerText = '点击播放';
+							}, function(e) {
+								playState.innerText = '点击播放';
+							});
+						}
+					};
+
+					var imageViewer = new mui.ImageViewer('.msg-content-image', {
+						dbl: false
+					});
+
+					// 添加自定义事件，刷新好友请求，初始化websocket
+					window.addEventListener("drawMsgList", function() {
+						bindMsgList();
+					});
+
+					var bindMsgList = function() {
+
+						//把消息插入到msglist					
+						console.log("开始渲染消息");
+						console.log(JSON.stringify(app.getUserChatHistory(me.id, friendUserId)));
+
+						ui.areaMsgList.innerHTML = template('msg-template', {
+							"record": app.getUserChatHistory(me.id, friendUserId),
+							"friendImg": app.imgServerUrl + friendFaceImage,
+							"myImg": app.imgServerUrl + me.faceImage
+
+						});
+
+						//为每条消息绑定语音事件
+						var msgItems = ui.areaMsgList.querySelectorAll('.msg-item');
+						[].forEach.call(msgItems, function(item, index) {
+							item.addEventListener('tap', function(event) {
+								msgItemTap(item, event);
+							}, false);
+						});
+
+						imageViewer.findAllImage();
+						//自动滚动到底部						
+						ui.areaMsgList.scrollTop = ui.areaMsgList.scrollHeight + ui.areaMsgList.offsetHeight;
+					};
+
+					//执行绑定消息函数
+					bindMsgList();
+
+					//添加resize的事件 就是用户可见视图改变 比如弹出键盘
+					window.addEventListener('resize', function() {
+						ui.areaMsgList.scrollTop = ui.areaMsgList.scrollHeight + ui.areaMsgList.offsetHeight;
+					}, false);
+
+
+
+
+					//访问图灵接口
+					var toRobot = function(info) {
+						var apiUrl = 'http://www.tuling123.com/openapi/api';
+						mui.getJSON(apiUrl, {
+							"key": 'f31e39bb8b6545e78ff700eeb6c28812',
+							"info": info,
+							"userid": plus.device.uuid
+						}, function(data) {
+							//alert(JSON.stringify(data));
+
+							//把消息放到消息列表中
+							record.push({
+								sender: 'zs',
+								type: 'text',
+								content: data.text
+							});
+							//刷新消息列表
+							bindMsgList();
+						});
+					};
+
+					function msgTextFocus() {
+						ui.boxMsgText.focus();
+						setTimeout(function() {
+							ui.boxMsgText.focus();
+						}, 150);
+					}
+
+					//解决长按“发送”按钮，导致键盘关闭的问题；
+					ui.footerRight.addEventListener('touchstart', function(event) {
+						if (ui.btnMsgType.classList.contains('mui-icon-paperplane')) {
+							msgTextFocus();
+							event.preventDefault();
+						}
+					});
+					//解决长按“发送”按钮，导致键盘关闭的问题；
+					ui.footerRight.addEventListener('touchmove', function(event) {
+						if (ui.btnMsgType.classList.contains('mui-icon-paperplane')) {
+							msgTextFocus();
+							event.preventDefault();
+						}
+					});
+					//					ui.footerRight.addEventListener('touchcancel', function(event) {
+					//						if (ui.btnMsgType.classList.contains('mui-icon-paperplane')) {
+					//							msgTextFocus();
+					//							event.preventDefault();
+					//						}
+					//					});
+					//					ui.footerRight.addEventListener('touchend', function(event) {
+					//						if (ui.btnMsgType.classList.contains('mui-icon-paperplane')) {
+					//							msgTextFocus();
+					//							event.preventDefault();
+					//						}
+					//					});
+
+
+
+
+
+					var WSsendMsg = function(msgtype, msg) {
+						console.log('开始构建消息');
+						// 构建ChatMsg
+						var chatMsg = new app.MixinMsg(me.id, me.nickname, friendUserId, msg, msgtype, null);
+						// 构建DataContent
+						var dataContent = new app.DataContent(app.CHAT, chatMsg, null);
+
+						// 调用websocket 发送消息到netty后端
+						var wsWebview = plus.webview.getWebviewById("lemon-chatlist.html");
+
+						wsWebview.evalJS("CHAT.chat('" + JSON.stringify(dataContent) + "')");
+						//wsWebview.evalJS("CHAT.chat('" + msg_text_val + "')");
+
+						// 保存聊天历史记录到本地缓存
+						app.saveUserChatHistory(me.id, me.nickname, friendUserId, msg, msgtype, 1);
+						app.saveUserChatSnapshot(me.id, friendUserId, msg, true, msgtype);
+
+
+						//渲染消息
+						bindMsgList();
+					}
+
+					// 播放发送消息的铃声
+					function playSendMsgSound() {
+						var audioPlayer = plus.audio.createPlayer("/mp3/send.mp3");
+						audioPlayer.play();
+					}
+
+					//发送消息
+					var sendMsg = function(msgtype, msg) {
+
+						// 发送之前判断网络的状态
+						var connectionStatus = plus.networkinfo.getCurrentType();
+						if (connectionStatus == 0 || connectionStatus == 1) {
+							app.showToast("请打开网络连接...", "error");
+							return;
+						}
+						if (msgtype == 'text') {
+							console.log(app.ThTsStr(msg));
+							WSsendMsg(msgtype, app.ThTsStr(msg));
+							playSendMsgSound();
+						} else if (msgtype == 'image') {
+							var bitmap = new plus.nativeObj.Bitmap("pic");
+							// 从本地加载Bitmap图片  //这个是异步消息也就是只有获取到base64才能发送数据
+							bitmap.load(msg, function() {
+								msg = bitmap.toBase64Data();
+								console.log(msg);
+								console.log('加载图片成功');
+								bitmap.clear();
+								WSsendMsg(msgtype, msg);
+
+							}, function(e) {
+								console.log('加载图片失败：' + JSON.stringify(e));
+							});
+
+						} else if (msgtype == 'sound') {
+
+						}
+
+
+
+						//发送给图灵机器人
+						//toRobot(msg.content);
+					};
+
+					ui.footerRight.addEventListener('release', function(event) {
+
+						if (ui.btnMsgType.classList.contains('mui-icon-paperplane')) {
+							//showKeyboard();
+							ui.boxMsgText.focus();
+							setTimeout(function() {
+								ui.boxMsgText.focus();
+							}, 150);
+							//							event.detail.gesture.preventDefault();
+
+							if (ui.boxMsgText.value.length === 0) {
+								return;
+							} else if (ui.boxMsgText.value.length > 16000) {
+								app.showToast("消息太长，请分段发送！", "error");
+								return;
+							}
+
+							// 发送消息, 渲染消息的html到msg div之下
+							sendMsg('text', ui.boxMsgText.value);
+
+
+							//						receiveMsg("模拟接受消息~~~~~~");
+
+							/* sendMsg({
+								sender: 'self',
+								type: 'text',
+								content: ui.boxMsgText.value.replace(new RegExp('\n', 'gm'), '<br/>')
+							}); */
+
+							ui.boxMsgText.value = '';
+							//fire 调用其他窗口的函数 trigger 调用某个dom节点的函数
+							mui.trigger(ui.boxMsgText, 'input', null);
+
+						} else if (ui.btnMsgType.classList.contains('mui-icon-mic')) {
+							ui.btnMsgType.classList.add('mui-icon-compose');
+							ui.btnMsgType.classList.remove('mui-icon-mic');
+							ui.boxMsgText.style.display = 'none';
+							ui.boxMsgSound.style.display = 'block';
+							ui.boxMsgText.blur();
+							document.body.focus();
+						} else if (ui.btnMsgType.classList.contains('mui-icon-compose')) {
+							ui.btnMsgType.classList.add('mui-icon-mic');
+							ui.btnMsgType.classList.remove('mui-icon-compose');
+							ui.boxMsgSound.style.display = 'none';
+							ui.boxMsgText.style.display = 'block';
+							//--
+							//showKeyboard();
+							ui.boxMsgText.focus();
+							setTimeout(function() {
+								ui.boxMsgText.focus();
+							}, 150);
+						}
+					}, false);
+
+					ui.footerLeft.addEventListener('tap', function(event) {
+						var btnArray = [{
+							title: "拍照"
+						}, {
+							title: "从相册选择"
+						}];
+						plus.nativeUI.actionSheet({
+							title: "选择照片",
+							cancel: "取消",
+							buttons: btnArray
+						}, function(e) {
+							var index = e.index;
+							switch (index) {
+								case 0:
+									break;
+								case 1:
+									var cmr = plus.camera.getCamera();
+									cmr.captureImage(function(path) {
+										sendMsg('image', "file://" + plus.io.convertLocalFileSystemURL(path));
+									}, function(err) {});
+									break;
+								case 2:
+									plus.gallery.pick(function(path) {
+										sendMsg('image', path);
+									}, function(err) {}, null);
+									break;
+							}
+						});
+					}, false);
+
+					var setSoundAlertVisable = function(show) {
+						if (show) {
+							ui.boxSoundAlert.style.display = 'block';
+							ui.boxSoundAlert.style.opacity = 1;
+						} else {
+							ui.boxSoundAlert.style.opacity = 0;
+							//fadeOut 完成再真正隐藏
+							setTimeout(function() {
+								ui.boxSoundAlert.style.display = 'none';
+							}, 200);
+						}
+					};
+
+					var recordCancel = false;
+					var recorder = null;
+					var audio_tips = document.getElementById("audio_tips");
+					var startTimestamp = null;
+					var stopTimestamp = null;
+					var stopTimer = null;
+					ui.boxMsgSound.addEventListener('hold', function(event) {
+						recordCancel = false;
+						if (stopTimer) clearTimeout(stopTimer);
+						audio_tips.innerHTML = "手指上划，取消发送";
+						ui.boxSoundAlert.classList.remove('rprogress-sigh');
+						setSoundAlertVisable(true);
+						recorder = plus.audio.getRecorder();
+						if (recorder == null) {
+							plus.nativeUI.toast("不能获取录音对象");
+							return;
+						}
+						startTimestamp = (new Date()).getTime();
+						recorder.record({
+							filename: "_doc/audio/"
+						}, function(path) {
+							if (recordCancel) return;
+							sendMsg('sound', path);
+
+						}, function(e) {
+							plus.nativeUI.toast("录音时出现异常: " + e.message);
+						});
+					}, false);
+					ui.body.addEventListener('drag', function(event) {
+						//console.log('drag');
+						if (Math.abs(event.detail.deltaY) > 50) {
+							if (!recordCancel) {
+								recordCancel = true;
+								if (!audio_tips.classList.contains("cancel")) {
+									audio_tips.classList.add("cancel");
+								}
+								audio_tips.innerHTML = "松开手指，取消发送";
+							}
+						} else {
+							if (recordCancel) {
+								recordCancel = false;
+								if (audio_tips.classList.contains("cancel")) {
+									audio_tips.classList.remove("cancel");
+								}
+								audio_tips.innerHTML = "手指上划，取消发送";
+							}
+						}
+					}, false);
+					ui.boxMsgSound.addEventListener('release', function(event) {
+						//console.log('release');
+						if (audio_tips.classList.contains("cancel")) {
+							audio_tips.classList.remove("cancel");
+							audio_tips.innerHTML = "手指上划，取消发送";
+						}
+						//
+						stopTimestamp = (new Date()).getTime();
+						if (stopTimestamp - startTimestamp < MIN_SOUND_TIME) {
+							audio_tips.innerHTML = "录音时间太短";
+							ui.boxSoundAlert.classList.add('rprogress-sigh');
+							recordCancel = true;
+							stopTimer = setTimeout(function() {
+								setSoundAlertVisable(false);
+							}, 800);
+						} else {
+							setSoundAlertVisable(false);
+						}
+						recorder.stop();
+					}, false);
+					ui.boxMsgSound.addEventListener("touchstart", function(e) {
+						//console.log("start....");
+						e.preventDefault();
+					});
+
+					ui.boxMsgText.addEventListener('input', function(event) {
+						ui.btnMsgType.classList[ui.boxMsgText.value == '' ? 'remove' : 'add']('mui-icon-paperplane');
+						ui.btnMsgType.setAttribute("for", ui.boxMsgText.value == '' ? '' : 'msg-text');
+						ui.h.innerText = ui.boxMsgText.value.replace(new RegExp('\n', 'gm'), '\n-') || '-';
+						ui.footer.style.height = (ui.h.offsetHeight + footerPadding) + 'px';
+						ui.content.style.paddingBottom = ui.footer.style.height;
+					});
+					var focus = false;
+
+					ui.boxMsgText.addEventListener('tap', function(event) {
+						/* console.log("点击获取焦点"); */
+						ui.boxMsgText.focus();
+						/*
+						//这里先注释一下
+						 setTimeout(function() {
+							ui.boxMsgText.focus();
+						}, 0);
+						focus = true;
+						setTimeout(function() {
+							focus = false;
+						}, 1000);
+						event.detail.gesture.preventDefault(); */
+					}, false);
+
+					//点击消息列表，关闭键盘
+					ui.areaMsgList.addEventListener('click', function(event) {
+						if (!focus) {
+							ui.boxMsgText.blur();
+						}
+					})
+
+				});
+			}(mui, document));
 		</script>
 	</body>
-
 
 </html>

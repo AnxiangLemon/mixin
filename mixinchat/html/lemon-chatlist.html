@@ -65,12 +65,12 @@
 				// 获取用户全局对象
 				var user = app.getUserGlobalInfo();
 				//退出关闭心跳
-				var WSInterval=0;
+				var WSInterval = 0;
 				//防止多次重连
 				var reloadWs = false;
-				
-				
-				
+
+
+
 				// 加载好友请求记录
 				var thisWebview = plus.webview.currentWebview();
 				thisWebview.addEventListener("show", function() {
@@ -82,14 +82,16 @@
 				window.addEventListener("refresh", function() {
 					loadingFriendRequests();
 					CHAT.init();
-				});	
-				
+				});
+
 				// 为聊天快照列表量绑定点击事件
 				mui("#ul_chatSnapshot").on("tap", ".chat-with-friend", function(e) {
 					var friendUserId = this.getAttribute("friendUserId");
 					var friendNickname = this.getAttribute("friendNickname");
 					var friendFaceImage = this.getAttribute("friendFaceImage");
 
+					console.log(friendUserId);
+				
 					// 打开聊天子页面
 					mui.openWindow({
 						url: "chatting.html",
@@ -161,39 +163,35 @@
 						CHAT.socket.readyState == WebSocket.OPEN) {
 						CHAT.socket.send(msg);
 					} else {
-						
 						/**
 						 * 重连websocket
-						 */ 
-						if(reloadWs){	
+						 */
+						if (reloadWs) {
 							reloadWs = false;
 							CHAT.init();
 							setTimeout("CHAT.reChat('" + msg + "')", "3000");
-							
 						}
-						 
-						
 					}
 					// 渲染快照列表进行展示
 					loadingChatSnapshot();
 				},
 				reChat: function(msg) {
-				
+
 					//添加状态判断，当为OPEN时，发送消息
 					if (CHAT.socket != null &&
 						CHAT.socket != undefined &&
 						CHAT.socket.readyState == WebSocket.OPEN) {
 						CHAT.socket.send(msg);
-					} else{
+					} else {
 						//do something
 						console.log("重连websocket中……")
 					}
-					
+
 				},
 				wsopen: function() {
-					
-					
-					console.log("websocket连接已建立..."+CHAT.socket.readyState);
+
+
+					console.log("websocket连接已建立..." + CHAT.socket.readyState);
 
 					var me = app.getUserGlobalInfo();
 					// 构建mixinMsg
@@ -207,15 +205,15 @@
 					fetchUnReadMsg();
 
 					// 定时发送心跳
-					WSInterval =  setInterval("CHAT.keepalive()", 4000);
-					
-						/**
-						 * 先赋值 然后再写方法 不然会undefined
-						 * 退出登录后停止websocket 
-						 */
-						window.addEventListener("WsCleanInterval", function() {					
-							clearInterval(WSInterval);
-						});
+					WSInterval = setInterval("CHAT.keepalive()", 20000);
+
+					/**
+					 * 先赋值 然后再写方法 不然会undefined
+					 * 退出登录后停止websocket 
+					 */
+					window.addEventListener("WsCleanInterval", function() {
+						clearInterval(WSInterval);
+					});
 				},
 				wsmessage: function(e) {
 					console.log("接受到消息：" + e.data);
@@ -228,19 +226,28 @@
 						return false;
 					}
 
+
 					// 如果不是重新拉取好友列表，则获取聊天消息模型，渲染接收到的聊天记录
 					var mixinMsg = dataContent.mixinMsg;
 					var msg = mixinMsg.msg;
 					var friendUserId = mixinMsg.senderId;
 					var myId = mixinMsg.receiverId;
+					var msgtype = mixinMsg.type;
+					var senderNick = mixinMsg.senderNick;
 
 					// 调用聊天webview的receiveMsg方法
 					// var chatWebview = plus.webview.getWebviewById("chatting-180718GA2ZM9N5S8");
 					var chatWebview = plus.webview.getWebviewById("chatting-" + friendUserId);
 					var isRead = true; // 设置消息的默认状态为已读
+					console.log(chatWebview);
+					// 保存聊天历史记录到本地缓存	
+					app.saveUserChatHistory(myId, senderNick, friendUserId, msg, msgtype, 2);
 					if (chatWebview != null) {
-						chatWebview.evalJS("receiveMsg('" + msg + "')");
-						chatWebview.evalJS("resizeScreen()");
+						// chatWebview.evalJS("receiveMsg('" + msg + "')");		
+								mui.fire(chatWebview, "drawMsgList");
+									
+						/* chatWebview.evalJS("bindMsgList()");						
+						chatWebview.evalJS("resizeScreen()"); */
 					} else {
 						isRead = false; // chatWebview 聊天页面没有打开，标记消息未读状态
 					}
@@ -248,9 +255,10 @@
 					// 接受到消息之后，对消息记录进行签收
 					var dataContentSign = new app.DataContent(app.SIGNED, null, mixinMsg.msgId);
 					CHAT.chat(JSON.stringify(dataContentSign));
-					// 保存聊天历史记录到本地缓存
-					app.saveUserChatHistory(myId, friendUserId, msg, 2);
-					app.saveUserChatSnapshot(myId, friendUserId, msg, isRead);
+									
+					app.saveUserChatSnapshot(myId, friendUserId, msg, isRead, msgtype);
+					/* 	app.saveUserChatHistory(myId, friendUserId, msg, 2);
+						app.saveUserChatSnapshot(myId, friendUserId, msg, isRead); */
 					// 渲染快照列表进行展示
 					loadingChatSnapshot();
 				},
@@ -276,14 +284,14 @@
 					if (CHAT.socket != null &&
 						CHAT.socket != undefined &&
 						CHAT.socket.readyState == WebSocket.OPEN) {
-							console.log("发送心跳……");
-					// 发送心跳
-					CHAT.chat(JSON.stringify(dataContent));
-					// 定时执行函数
-					fetchUnReadMsg();
-					fetchContactList();
+						console.log("发送心跳……");
+						// 发送心跳
+						CHAT.chat(JSON.stringify(dataContent));
+						// 定时执行函数
+						fetchUnReadMsg();
+						fetchContactList();
 					}
-				
+
 				}
 			};
 
@@ -309,13 +317,10 @@
 							for (var i = 0; i < unReadMsgList.length; i++) {
 								var msgObj = unReadMsgList[i];
 								// 逐条存入聊天记录
-								app.saveUserChatHistory(msgObj.acceptUserId,
-									msgObj.sendUserId,
-									msgObj.msg, 2);
-								// 存入聊天快照
-								app.saveUserChatSnapshot(msgObj.acceptUserId,
-									msgObj.sendUserId,
-									msgObj.msg, false);
+								app.saveUserChatHistory(msgObj.acceptUserId, msgObj.senderNick, msgObj.sendUserId, msgObj
+									.msg, msgObj.type, 2); // 存入聊天快照
+								app.saveUserChatSnapshot(msgObj.acceptUserId, msgObj.sendUserId, msgObj.msg, false, msgObj.type);
+
 								// 拼接批量接受的消息id字符串，逗号间隔
 								msgIds += msgObj.id;
 								msgIds += ",";
@@ -352,7 +357,7 @@
 						readHtmlAfter = '</span>';
 					}
 					var tmpmsg = chatItem.msg;
-					
+
 					chatItemHtml = '<li friendUserId="' + friendId + '" friendNickname="' + friend.friendNickname +
 						'" friendFaceImage="' + friend.friendFaceImage + '" class="chat-with-friend mui-table-view-cell mui-media">' +
 						'<div class="mui-slider-right mui-disabled">' +
@@ -361,7 +366,7 @@
 						'<div class="mui-slider-handle mui-media-body ">' +
 						'<img class="mui-media-object mui-pull-left" src="' + app.imgServerUrl + friend.friendFaceImage + '"/>' +
 						readHtmlBefore + friend.friendNickname + readHtmlAfter +
-						'<p class="mui-ellipsis">' +tmpmsg.replace(/<br\/>/g, "\r\n")  + '</p>' +
+						'<p class="mui-ellipsis">' + tmpmsg.replace(/<br\/>/g, "\r\n") + '</p>' +
 						'</div>' +
 						'</li>';
 					ul_chatSnapshot.insertAdjacentHTML('beforeend', chatItemHtml);
@@ -383,7 +388,7 @@
 
 						if (data.status == 200) {
 							var contactList = data.data;
-						console.log("定时获取好友列表"+contactList);
+							//						console.log("定时获取好友列表"+contactList);
 							app.setContactList(contactList);
 						}
 					}

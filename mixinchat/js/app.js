@@ -3,12 +3,12 @@ window.app = {
 	/**
 	 * netty服务后端发布的url地址
 	 */
-	nettyServerUrl: 'ws://172.16.10.105:7088/ws',
+	nettyServerUrl: 'ws://172.16.10.108:7088/ws',
 
 	/**
 	 * 后端服务发布的url地址
 	 */
-	serverUrl: 'http://172.16.10.105:7080/mixin/',
+	serverUrl: 'http://172.16.10.108:7080/mixin/',
 
 	/**
 	 * 图片服务器的url地址
@@ -38,7 +38,7 @@ window.app = {
 	ThTsStr: function(content) {
 		var string = content;
 		try {
-			
+
 			string = string.replace(/>/g, "&gt;")
 			string = string.replace(/</g, "&lt;");
 			string = string.replace(/\"/g, "&quot;")
@@ -155,7 +155,7 @@ window.app = {
 	 * @param {Object} msg
 	 * @param {Object} flag	判断本条消息是我发送的，还是朋友发送的，1:我  2:朋友
 	 */
-	saveUserChatHistory: function(myId, friendId, msg, flag) {
+	saveUserChatHistory: function(myId, nick,friendId, msg,type, flag) {
 		var me = this;
 		var chatKey = "chat-" + myId + "-" + friendId;
 
@@ -171,11 +171,11 @@ window.app = {
 		}
 
 		// 构建聊天记录对象
-		var singleMsg = new me.ChatHistory(myId, friendId, msg, flag);
-
+		var singleMsg = new me.ChatHistory(myId, nick,friendId, msg,type, flag);
+		
+		
 		// 向list中追加msg对象
 		chatHistoryList.push(singleMsg);
-
 		plus.storage.setItem(chatKey, JSON.stringify(chatHistoryList));
 	},
 
@@ -196,7 +196,6 @@ window.app = {
 			// 如果为空，赋一个空的list
 			chatHistoryList = [];
 		}
-
 		return chatHistoryList;
 	},
 
@@ -340,15 +339,19 @@ window.app = {
 	/**
 	 * 和后端的 MixinMsg 聊天模型对象保持一致
 	 * @param {Object} senderId
+	 * @param {Object} nick  我的昵称
 	 * @param {Object} receiverId
 	 * @param {Object} msg
+	 * @param {Object} type  消息类型
 	 * @param {Object} msgId
 	 */
-	MixinMsg: function(senderId, receiverId, msg, msgId) {
+	MixinMsg: function(senderId, senderNick, receiverId, msg, type, msgId) {
 		this.senderId = senderId;
 		this.receiverId = receiverId;
 		this.msg = msg;
 		this.msgId = msgId;
+		this.type = type;
+		this.senderNick = senderNick;
 	},
 
 	/**
@@ -368,15 +371,14 @@ window.app = {
 	 * @param {Object} myId 我的id
 	 * @param {Object} friendId 朋友ID
 	 * @param {Object} msg 消息
-	 * @param {Object} flag 标志
-	 * @param {Object} type  消息类型
 	 */
-	ChatHistory: function(myId, friendId, msg, flag,msgtype) {
-		this.myId = myId;
-		this.friendId = friendId;
+	ChatHistory: function(senderId, senderNick, receiverId, msg, type, flag) {
+		this.senderId = senderId;
+		this.receiverId = receiverId;
 		this.msg = msg;
 		this.flag = flag;
-		this.msgType = msgtype;
+		this.type = type;
+		this.senderNick = senderNick;
 	},
 
 	/**
@@ -386,11 +388,13 @@ window.app = {
 	 * @param {Object} msg
 	 * @param {Object} isRead	用于判断消息是否已读还是未读
 	 */
-	ChatSnapshot: function(myId, friendId, msg, isRead) {
+	ChatSnapshot: function(myId, friendId, msg,isRead,type) {
 		this.myId = myId;
 		this.friendId = friendId;
 		this.msg = msg;
 		this.isRead = isRead;
+		this.type = type;
+		
 	}
 
 }
