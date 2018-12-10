@@ -136,6 +136,8 @@ footer {
 
 .msg-item .msg-content .msg-content-inner {
 	overflow-x: hidden;
+	word-break: break-all;
+	word-wrap: break-word;
 }
 
 .msg-item .msg-content .msg-content-arrow {

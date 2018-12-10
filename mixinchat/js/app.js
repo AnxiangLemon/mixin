@@ -3,18 +3,30 @@ window.app = {
 	/**
 	 * netty服务后端发布的url地址
 	 */
-	nettyServerUrl: 'ws://172.16.10.108:7088/ws',
+	nettyServerUrl: 'ws://172.16.10.104:7088/ws',
 
 	/**
 	 * 后端服务发布的url地址
 	 */
-	serverUrl: 'http://172.16.10.108:7080/mixin/',
+	serverUrl: 'http://172.16.10.104:7080/mixin/',
 
 	/**
 	 * 图片服务器的url地址
 	 */
 	imgServerUrl: 'http://103.229.147.196/group1/',
 
+	/**
+	 * 取文件后缀名
+	 */
+	getFileHouZhuiName: function(filename){
+		var index1=filename.lastIndexOf(".");	
+		var index2=filename.length;
+		var postf=filename.substring(index1+1,index2);//后缀名
+		console.log(postf);
+		
+		return postf;
+		
+	},
 
 	/**
 	 *替换所有换行符
@@ -155,7 +167,7 @@ window.app = {
 	 * @param {Object} msg
 	 * @param {Object} flag	判断本条消息是我发送的，还是朋友发送的，1:我  2:朋友
 	 */
-	saveUserChatHistory: function(myId, nick,friendId, msg,type, flag) {
+	saveUserChatHistory: function(myId, nick, friendId, msg, type, flag,amrLen) {
 		var me = this;
 		var chatKey = "chat-" + myId + "-" + friendId;
 
@@ -171,9 +183,9 @@ window.app = {
 		}
 
 		// 构建聊天记录对象
-		var singleMsg = new me.ChatHistory(myId, nick,friendId, msg,type, flag);
-		
-		
+		var singleMsg = new me.ChatHistory(myId, nick, friendId, msg, type, flag,amrLen);
+
+
 		// 向list中追加msg对象
 		chatHistoryList.push(singleMsg);
 		plus.storage.setItem(chatKey, JSON.stringify(chatHistoryList));
@@ -212,7 +224,7 @@ window.app = {
 	 * @param {Object} msg
 	 * @param {Object} isRead
 	 */
-	saveUserChatSnapshot: function(myId, friendId, msg, isRead) {
+	saveUserChatSnapshot: function(myId, friendId, msg, isRead,type) {
 		var me = this;
 		var chatKey = "chat-snapshot" + myId;
 
@@ -236,7 +248,7 @@ window.app = {
 		}
 
 		// 构建聊天快照对象
-		var singleMsg = new me.ChatSnapshot(myId, friendId, msg, isRead);
+		var singleMsg = new me.ChatSnapshot(myId, friendId, msg, isRead,type);
 
 		// 向list中追加快照对象
 		chatSnapshotList.unshift(singleMsg);
@@ -335,6 +347,14 @@ window.app = {
 	SIGNED: 3, // 消息签收
 	KEEPALIVE: 4, // 客户端保持心跳
 	PULL_FRIEND: 5, // 重新拉取好友
+	//---------------------
+	//消息类型
+	MSG_TEXT:1,
+	MSG_IMAGE:3,
+	MSG_SOUND:4,
+	MSG_PRIVITE:10001,
+	MSG_GROUP:10002,
+	
 
 	/**
 	 * 和后端的 MixinMsg 聊天模型对象保持一致
@@ -345,13 +365,16 @@ window.app = {
 	 * @param {Object} type  消息类型
 	 * @param {Object} msgId
 	 */
-	MixinMsg: function(senderId, senderNick, receiverId, msg, type, msgId) {
+	MixinMsg: function(senderId, senderNick, receiverId, msg, type, msgId,amrLen) {
 		this.senderId = senderId;
 		this.receiverId = receiverId;
 		this.msg = msg;
 		this.msgId = msgId;
 		this.type = type;
 		this.senderNick = senderNick;
+		if(amrLen!=undefined){
+			this.amrLen = amrLen;
+		}
 	},
 
 	/**
@@ -372,13 +395,16 @@ window.app = {
 	 * @param {Object} friendId 朋友ID
 	 * @param {Object} msg 消息
 	 */
-	ChatHistory: function(senderId, senderNick, receiverId, msg, type, flag) {
+	ChatHistory: function(senderId, senderNick, receiverId, msg, type, flag,amrLen) {
 		this.senderId = senderId;
 		this.receiverId = receiverId;
 		this.msg = msg;
 		this.flag = flag;
 		this.type = type;
 		this.senderNick = senderNick;
+		if(amrLen!=undefined){
+			this.amrLen = amrLen;
+		}
 	},
 
 	/**
@@ -388,13 +414,13 @@ window.app = {
 	 * @param {Object} msg
 	 * @param {Object} isRead	用于判断消息是否已读还是未读
 	 */
-	ChatSnapshot: function(myId, friendId, msg,isRead,type) {
+	ChatSnapshot: function(myId, friendId, msg, isRead, type) {
 		this.myId = myId;
 		this.friendId = friendId;
 		this.msg = msg;
 		this.isRead = isRead;
 		this.type = type;
-		
+
 	}
 
 }

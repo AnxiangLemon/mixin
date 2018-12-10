@@ -156,7 +156,8 @@
 					}
 				},
 				chat: function(msg) {
-
+					console.log("状态："+ CHAT.socket.readyState+"消息内容："+msg);
+					
 					// 如果当前websocket的状态是已打开，则直接发送， 否则重连
 					if (CHAT.socket != null &&
 						CHAT.socket != undefined &&
@@ -191,7 +192,7 @@
 				wsopen: function() {
 
 
-					console.log("websocket连接已建立..." + CHAT.socket.readyState);
+					console.log("websocket连接已建立..." );
 
 					var me = app.getUserGlobalInfo();
 					// 构建mixinMsg
@@ -239,9 +240,18 @@
 					// var chatWebview = plus.webview.getWebviewById("chatting-180718GA2ZM9N5S8");
 					var chatWebview = plus.webview.getWebviewById("chatting-" + friendUserId);
 					var isRead = true; // 设置消息的默认状态为已读
-					console.log(chatWebview);
+			//		console.log(chatWebview);
 					// 保存聊天历史记录到本地缓存	
-					app.saveUserChatHistory(myId, senderNick, friendUserId, msg, msgtype, 2);
+					
+					if(msgtype == app.MSG_SOUND){
+						app.saveUserChatHistory(myId, senderNick, friendUserId, msg, msgtype, 2,mixinMsg.amrLen);
+					}else{
+						app.saveUserChatHistory(myId, senderNick, friendUserId, msg, msgtype, 2);
+					}
+					
+					
+					
+					
 					if (chatWebview != null) {
 						// chatWebview.evalJS("receiveMsg('" + msg + "')");		
 								mui.fire(chatWebview, "drawMsgList");
@@ -263,10 +273,12 @@
 					loadingChatSnapshot();
 				},
 				wsclose: function() {
+					app.showToast("未知原因，连接关闭...","error")
 					console.log("连接关闭...");
 					reloadWs = true;
 				},
 				wserror: function() {
+					app.showToast("未知原因，发生错误...","error")
 					console.log("发生错误...");
 					reloadWs = true;
 				},
@@ -317,8 +329,14 @@
 							for (var i = 0; i < unReadMsgList.length; i++) {
 								var msgObj = unReadMsgList[i];
 								// 逐条存入聊天记录
-								app.saveUserChatHistory(msgObj.acceptUserId, msgObj.senderNick, msgObj.sendUserId, msgObj
-									.msg, msgObj.type, 2); // 存入聊天快照
+								if(msgObj.type=="sound"){
+									app.saveUserChatHistory(msgObj.acceptUserId, msgObj.senderNick, msgObj.sendUserId, msgObj
+										.msg, msgObj.type, 2,msgObj.amrLen); // 存入聊天快照
+								}else{
+									app.saveUserChatHistory(msgObj.acceptUserId, msgObj.senderNick, msgObj.sendUserId, msgObj
+										.msg, msgObj.type, 2); // 存入聊天快照
+								}
+								
 								app.saveUserChatSnapshot(msgObj.acceptUserId, msgObj.sendUserId, msgObj.msg, false, msgObj.type);
 
 								// 拼接批量接受的消息id字符串，逗号间隔
@@ -344,7 +362,8 @@
 				ul_chatSnapshot.innerHTML = "";
 				for (var i = 0; i < chatSnapshotList.length; i++) {
 					var chatItem = chatSnapshotList[i];
-
+					//console.log(JSON.stringify(chatItem));
+					
 					var friendId = chatItem.friendId;
 					// 根据friendId从本地联系人列表的缓存中拿到相关信息
 					var friend = app.getFriendFromContactList(friendId);
@@ -357,6 +376,15 @@
 						readHtmlAfter = '</span>';
 					}
 					var tmpmsg = chatItem.msg;
+					if(chatItem.type==app.MSG_TEXT){
+						 tmpmsg = tmpmsg.replace(/<br\/>/g, "\r\n")
+					}else if(chatItem.type==app.MSG_IMAGE){
+						tmpmsg = "【图片消息】";
+					}else if(chatItem.type== app.MSG_SOUND){
+						tmpmsg = "【语音消息】";
+					}else {
+						tmpmsg = "【其他类型消息】";
+					}
 
 					chatItemHtml = '<li friendUserId="' + friendId + '" friendNickname="' + friend.friendNickname +
 						'" friendFaceImage="' + friend.friendFaceImage + '" class="chat-with-friend mui-table-view-cell mui-media">' +
@@ -366,7 +394,7 @@
 						'<div class="mui-slider-handle mui-media-body ">' +
 						'<img class="mui-media-object mui-pull-left" src="' + app.imgServerUrl + friend.friendFaceImage + '"/>' +
 						readHtmlBefore + friend.friendNickname + readHtmlAfter +
-						'<p class="mui-ellipsis">' + tmpmsg.replace(/<br\/>/g, "\r\n") + '</p>' +
+						'<p class="mui-ellipsis">' +tmpmsg + '</p>' +
 						'</div>' +
 						'</li>';
 					ul_chatSnapshot.insertAdjacentHTML('beforeend', chatItemHtml);
