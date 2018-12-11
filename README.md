@@ -1,16 +1,15 @@
 # mixin
 websocket聊天
 
---2018.12.10
-完成图片和语音发送
-完成
 
-已完成文字聊天 表情可以发送搜狗表情
+
+12.3~12.6
+已完成文字聊天 表情可以发送搜狗输入法小表情
 
 图片和语音下个版本更新
 目前正在搭建UI
 
-12.3~12.6
+
 git remote add origin git@github.com:AnxiangLemon/mixin.git
 
 C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\ProgramData\Oracle\Java\javapath;c:\Program Files (x86)\Intel\iCLS Client\;c:\Program Files\Intel\iCLS Client\;%SystemRoot%\system32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SYSTEMROOT%\System32\WindowsPowerShell\v1.0\;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;%JAVA_HOME%\bin;%JAVA_HOME%\jre\bin;C:\android\adt-bundle-windows-x86_64_20140101\sdk\platform-tools;C:\android\adt-bundle-windows-x86_64_20140101\sdk\tools;C:\Program Files (x86)\GtkSharp\2.12\bin;C:\android\Java\jdk\bin;D:\AndroidSDK\platform-tools;D:\Git\cmd;MAVAEN_HOME%MAVEN_HOME%\bin;
@@ -197,4 +196,32 @@ fire 比 evalJS 好用
 解决语音发送 
 
 发送图片后 不会滚动到最底部 
+
+
+下载缓存图片：http://ask.dcloud.net.cn/article/256
+
+
+关于消息图片缓存的问题
+首先把url加入到
+9 10 11 12
+1 2 3 4 5 6
+
+
+12-11
+解决图片压缩问题，好像H5+只能对jpg格式进行压缩~
+修复好友同意后联系人为空的状态
+
+以下是未解决的
+1.同意好友之后只能在联系人列表打开聊天窗口，应该同意之后直接生成一个聊天窗口在消息会话里面
+2.退出登录之后再登录导致消息列表还在 但是联系人列表已经为空 而且定时器也已经关闭 （等于就是没有延续了上一个用户的状态，并没有进行销毁和刷新）
+3.关于头像，图片缓存问题，每次都要下载头像流量，需要一套缓存方案来解决
+4.图片消息会被输入框挡住 这个UI样式 小生不会改啊！！！难受;
+5.图像放大之后 点击back键会回到会话主窗口，而真正的应该是关闭图片停留在此会话窗口
+6.默认头像，设置
+
+以上问题目前最主要的就是！切换账户所导致的消息残留和未刷新 socke关闭 明天务必解决！
+
+
+
+
 					

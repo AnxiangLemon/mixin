@@ -3,12 +3,12 @@ window.app = {
 	/**
 	 * netty服务后端发布的url地址
 	 */
-	nettyServerUrl: 'ws://172.16.10.104:7088/ws',
+	nettyServerUrl: 'ws://172.16.10.106:7088/ws',
 
 	/**
 	 * 后端服务发布的url地址
 	 */
-	serverUrl: 'http://172.16.10.104:7080/mixin/',
+	serverUrl: 'http://172.16.10.106:7080/mixin/',
 
 	/**
 	 * 图片服务器的url地址
@@ -22,12 +22,11 @@ window.app = {
 		var index1=filename.lastIndexOf(".");	
 		var index2=filename.length;
 		var postf=filename.substring(index1+1,index2);//后缀名
-		console.log(postf);
+//		console.log(postf);
 		
 		return postf;
 		
 	},
-
 	/**
 	 *替换所有换行符
 	 */
@@ -43,7 +42,6 @@ window.app = {
 		}
 		return string;
 	},
-
 	/**
 	 *替换特使字符
 	 */

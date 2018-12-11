@@ -91,7 +91,7 @@
 					var friendFaceImage = this.getAttribute("friendFaceImage");
 
 					console.log(friendUserId);
-				
+
 					// 打开聊天子页面
 					mui.openWindow({
 						url: "chatting.html",
@@ -137,6 +137,7 @@
 			window.CHAT = {
 				socket: null,
 				init: function() {
+
 					if (window.WebSocket) {
 
 						// 如果当前的状态已经连接，那就不需要重复初始化websocket
@@ -156,8 +157,8 @@
 					}
 				},
 				chat: function(msg) {
-					console.log("状态："+ CHAT.socket.readyState+"消息内容："+msg);
-					
+					//	console.log("状态："+ CHAT.socket.readyState+"消息内容："+msg);
+
 					// 如果当前websocket的状态是已打开，则直接发送， 否则重连
 					if (CHAT.socket != null &&
 						CHAT.socket != undefined &&
@@ -192,7 +193,7 @@
 				wsopen: function() {
 
 
-					console.log("websocket连接已建立..." );
+					console.log("websocket连接已建立...");
 
 					var me = app.getUserGlobalInfo();
 					// 构建mixinMsg
@@ -206,7 +207,7 @@
 					fetchUnReadMsg();
 
 					// 定时发送心跳
-					WSInterval = setInterval("CHAT.keepalive()", 20000);
+					WSInterval = setInterval("CHAT.keepalive()", 30000);
 
 					/**
 					 * 先赋值 然后再写方法 不然会undefined
@@ -240,22 +241,22 @@
 					// var chatWebview = plus.webview.getWebviewById("chatting-180718GA2ZM9N5S8");
 					var chatWebview = plus.webview.getWebviewById("chatting-" + friendUserId);
 					var isRead = true; // 设置消息的默认状态为已读
-			//		console.log(chatWebview);
+					//		console.log(chatWebview);
 					// 保存聊天历史记录到本地缓存	
-					
-					if(msgtype == app.MSG_SOUND){
-						app.saveUserChatHistory(myId, senderNick, friendUserId, msg, msgtype, 2,mixinMsg.amrLen);
-					}else{
+
+					if (msgtype == app.MSG_SOUND) {
+						app.saveUserChatHistory(myId, senderNick, friendUserId, msg, msgtype, 2, mixinMsg.amrLen);
+					} else {
 						app.saveUserChatHistory(myId, senderNick, friendUserId, msg, msgtype, 2);
 					}
-					
-					
-					
-					
+
+
+
+
 					if (chatWebview != null) {
 						// chatWebview.evalJS("receiveMsg('" + msg + "')");		
-								mui.fire(chatWebview, "drawMsgList");
-									
+						mui.fire(chatWebview, "drawMsgList");
+
 						/* chatWebview.evalJS("bindMsgList()");						
 						chatWebview.evalJS("resizeScreen()"); */
 					} else {
@@ -265,7 +266,7 @@
 					// 接受到消息之后，对消息记录进行签收
 					var dataContentSign = new app.DataContent(app.SIGNED, null, mixinMsg.msgId);
 					CHAT.chat(JSON.stringify(dataContentSign));
-									
+
 					app.saveUserChatSnapshot(myId, friendUserId, msg, isRead, msgtype);
 					/* 	app.saveUserChatHistory(myId, friendUserId, msg, 2);
 						app.saveUserChatSnapshot(myId, friendUserId, msg, isRead); */
@@ -273,14 +274,20 @@
 					loadingChatSnapshot();
 				},
 				wsclose: function() {
-					app.showToast("未知原因，连接关闭...","error")
+					app.showToast("未知原因，连接关闭...", "error")
 					console.log("连接关闭...");
+					//防止多次重连
 					reloadWs = true;
+					//关闭心跳发送
+					clearInterval(WSInterval);
 				},
 				wserror: function() {
-					app.showToast("未知原因，发生错误...","error")
+					app.showToast("未知原因，发生错误...", "error")
 					console.log("发生错误...");
+					//防止多次重来
 					reloadWs = true;
+					//关闭多次心跳
+					clearInterval(WSInterval);
 				},
 				signMsgList: function(unSignedMsgIds) {
 					// 构建批量签收对象的模型
@@ -291,7 +298,7 @@
 					CHAT.chat(JSON.stringify(dataContentSign));
 				},
 				keepalive: function() {
-					// 构建对象
+					// 构建对象 发送心跳包
 					var dataContent = new app.DataContent(app.KEEPALIVE, null, null);
 					if (CHAT.socket != null &&
 						CHAT.socket != undefined &&
@@ -299,10 +306,20 @@
 						console.log("发送心跳……");
 						// 发送心跳
 						CHAT.chat(JSON.stringify(dataContent));
-						// 定时执行函数
-						fetchUnReadMsg();
-						fetchContactList();
+					} else {
+						//如果发送心跳的时候ws已经关闭 那么我们就要重连服务器
+						if (reloadWs) {
+							reloadWs = false;
+							CHAT.init();
+							setTimeout("CHAT.reChat('" + JSON.stringify(dataContent) + "')", "3000");
+						}
+
 					}
+
+					// 定时执行函数 获取未读消息
+					fetchUnReadMsg();
+					//获取联系人列表
+					fetchContactList();
 
 				}
 			};
@@ -329,14 +346,14 @@
 							for (var i = 0; i < unReadMsgList.length; i++) {
 								var msgObj = unReadMsgList[i];
 								// 逐条存入聊天记录
-								if(msgObj.type=="sound"){
+								if (msgObj.type == "sound") {
 									app.saveUserChatHistory(msgObj.acceptUserId, msgObj.senderNick, msgObj.sendUserId, msgObj
-										.msg, msgObj.type, 2,msgObj.amrLen); // 存入聊天快照
-								}else{
+										.msg, msgObj.type, 2, msgObj.amrLen); // 存入聊天快照
+								} else {
 									app.saveUserChatHistory(msgObj.acceptUserId, msgObj.senderNick, msgObj.sendUserId, msgObj
 										.msg, msgObj.type, 2); // 存入聊天快照
 								}
-								
+
 								app.saveUserChatSnapshot(msgObj.acceptUserId, msgObj.sendUserId, msgObj.msg, false, msgObj.type);
 
 								// 拼接批量接受的消息id字符串，逗号间隔
@@ -354,19 +371,25 @@
 
 			// 展示聊天快照，渲染列表
 			function loadingChatSnapshot() {
+				
 				var user = app.getUserGlobalInfo();
+				console.log(JSON.stringify(user));
 				var chatSnapshotList = app.getUserChatSnapshot(user.id);
 
 				var chatItemHtml = "";
 				var ul_chatSnapshot = document.getElementById("ul_chatSnapshot");
 				ul_chatSnapshot.innerHTML = "";
+				console.log(JSON.stringify(chatSnapshotList));
+				
 				for (var i = 0; i < chatSnapshotList.length; i++) {
 					var chatItem = chatSnapshotList[i];
 					//console.log(JSON.stringify(chatItem));
-					
+
 					var friendId = chatItem.friendId;
 					// 根据friendId从本地联系人列表的缓存中拿到相关信息
 					var friend = app.getFriendFromContactList(friendId);
+					console.log(JSON.stringify(friend));
+					
 					// 判断消息的已读或未读状态
 					var isRead = chatItem.isRead;
 					var readHtmlBefore = '';
@@ -376,13 +399,13 @@
 						readHtmlAfter = '</span>';
 					}
 					var tmpmsg = chatItem.msg;
-					if(chatItem.type==app.MSG_TEXT){
-						 tmpmsg = tmpmsg.replace(/<br\/>/g, "\r\n")
-					}else if(chatItem.type==app.MSG_IMAGE){
+					if (chatItem.type == app.MSG_TEXT) {
+						tmpmsg = tmpmsg.replace(/<br\/>/g, "\r\n")
+					} else if (chatItem.type == app.MSG_IMAGE) {
 						tmpmsg = "【图片消息】";
-					}else if(chatItem.type== app.MSG_SOUND){
+					} else if (chatItem.type == app.MSG_SOUND) {
 						tmpmsg = "【语音消息】";
-					}else {
+					} else {
 						tmpmsg = "【其他类型消息】";
 					}
 
@@ -394,7 +417,7 @@
 						'<div class="mui-slider-handle mui-media-body ">' +
 						'<img class="mui-media-object mui-pull-left" src="' + app.imgServerUrl + friend.friendFaceImage + '"/>' +
 						readHtmlBefore + friend.friendNickname + readHtmlAfter +
-						'<p class="mui-ellipsis">' +tmpmsg + '</p>' +
+						'<p class="mui-ellipsis">' + tmpmsg + '</p>' +
 						'</div>' +
 						'</li>';
 					ul_chatSnapshot.insertAdjacentHTML('beforeend', chatItemHtml);
@@ -487,6 +510,7 @@
 						// 更新通讯录
 						var myFriendList = data.data;
 						console.log(myFriendList);
+						//1211 目前服务器 返回的是null
 						app.setContactList(myFriendList);
 
 						// 刷新好友请求记录

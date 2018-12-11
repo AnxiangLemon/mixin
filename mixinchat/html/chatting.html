@@ -58,7 +58,7 @@
 				<i id='msg-image' class="mui-icon mui-icon-camera" style="font-size: 28px;"></i>
 			</div>
 			<div class="footer-center">
-				<textarea id='msg-text' type=app.MSG_TEXT class='input-text' autofocus="autofocus"></textarea>
+				<textarea id='msg-text' type="text" class='input-text' autofocus="autofocus"></textarea>
 				<button id='msg-sound' type="button" class='input-sound' style="display: none;">按住说话</button>
 			</div>
 			<label for="" class="footer-right">
@@ -195,7 +195,7 @@
 						if (msgType == app.MSG_SOUND) {
 							if (nowPlayer) {
 								player.stop();
-								playState.innerText = msgamrLen+' "';
+								playState.innerText = msgamrLen + '"';
 							}
 							player = plus.audio.createPlayer(msgContent);
 							playState = msgItem.querySelector('.play-state');
@@ -204,12 +204,12 @@
 							playState.innerText = '播放中...';
 
 							player.play(function() {
-								playState.innerText = msgamrLen+' "';
+								playState.innerText = msgamrLen + '"';
 								console.log("播放完毕！");
 								nowPlayer = false;
 							}, function(e) {
 								app.showToast("错误语音，播放失败！", "error")
-							//	playState.innerText = '点击播放';
+								//	playState.innerText = '点击播放';
 							});
 
 						}
@@ -234,7 +234,7 @@
 							"record": app.getUserChatHistory(me.id, friendUserId),
 							"friendImg": app.imgServerUrl + friendFaceImage,
 							"myImg": app.imgServerUrl + me.faceImage,
-							"app":app
+							"app": app
 						});
 
 						//为每条消息绑定语音事件
@@ -244,9 +244,11 @@
 								msgItemTap(item, event);
 							}, false);
 						});
-
+						
+						//console.log( JSON.stringify(msgItems[msgItems.length-1]));
 						imageViewer.findAllImage();
-						//自动滚动到底部						
+						//自动滚动到底部		
+					//	console.log(ui.areaMsgList.scrollTop+"---"+ui.areaMsgList.scrollHeight+"---"+ui.areaMsgList.offsetHeight);
 						ui.areaMsgList.scrollTop = ui.areaMsgList.scrollHeight + ui.areaMsgList.offsetHeight;
 					};
 
@@ -315,7 +317,9 @@
 					//							event.preventDefault();
 					//						}
 					//					});
-					
+
+
+
 					/**
 					 * 文件信息的base64数据
 					 * 文件的后缀名
@@ -323,6 +327,7 @@
 					 * 
 					 */
 					function uploadChatFile(base64Data, extName, msgType) {
+						console.log(base64Data);
 
 						plus.nativeUI.showWaiting("发送中...");
 
@@ -330,7 +335,6 @@
 						//var user = app.getUserGlobalInfo();
 						// 与后端联调
 						//FileBO(userId=null, base64Data=null, extName=null)
-
 						mui.ajax(app.serverUrl + "/chatmsg/uploadBase64File", {
 							data: {
 								userId: me.id,
@@ -356,9 +360,11 @@
 										app.saveUserChatHistory(me.id, me.nickname, friendUserId, fileAddr, msgType, 1);
 
 									}
-
+									console.log(new Date().getTime());
+									
 									app.saveUserChatSnapshot(me.id, friendUserId, data.data, true, msgType);
 									WSsendMsg(msgType, fileAddr);
+									console.log(new Date().getTime());
 								} else {
 									app.showToast(data.msg, "error");
 								}
@@ -405,10 +411,7 @@
 						//渲染消息
 						bindMsgList();
 					}
-
-
-
-
+					
 					//发送消息
 					var sendMsg = function(msgtype, msg) {
 						//console.log(sc);
@@ -418,7 +421,6 @@
 							app.showToast("请打开网络连接...", "error");
 							return;
 						}
-
 
 						///测试数据
 						if (msgtype == app.MSG_TEXT) {
@@ -441,6 +443,16 @@
 								var base64msg = bitmap.toBase64Data();
 								//app.saveUserChatHistory(me.id, me.nickname, friendUserId, base64msg, app.MSG_TEXT, 1);
 								bitmap.clear();
+								
+								//通过URL参数获取目录对象或文件对象
+								plus.io.resolveLocalFileSystemURL(msg, function(entry) {
+									entry.remove(function(entry) {
+										console.log("文件删除成功==" +msg);
+									}, function(e) {
+										console.log("文件删除失败=" + msg);
+									});
+								});
+								
 								console.log('加载图片成功');
 								//上传图片信息
 								uploadChatFile(base64msg, extName, app.MSG_IMAGE);
@@ -453,6 +465,7 @@
 							});
 
 						} else if (msgtype == app.MSG_SOUND) {
+							console.log(msg);
 							//获取语音的base64
 							Audio2dataURL(msg);
 						}
@@ -558,18 +571,45 @@
 								case 1:
 									var cmr = plus.camera.getCamera();
 									cmr.captureImage(function(path) {
-										sendMsg(app.MSG_IMAGE, "file://" + plus.io.convertLocalFileSystemURL(path));
+										path = "file://" + plus.io.convertLocalFileSystemURL(path);
+										var dstPath = path + "123.jpg";
+										convertImage(path, dstPath);
+										//sendMsg(app.MSG_IMAGE, "file://" + plus.io.convertLocalFileSystemURL(path));
 									}, function(err) {});
 									break;
 								case 2:
 									plus.gallery.pick(function(path) {
-										sendMsg(app.MSG_IMAGE, path);
+										console.log(path);
+										console.log(new Date().getTime());
+										var dstPath = path + "123.jpg";
+										convertImage(path, dstPath);
+
 									}, function(err) {}, null);
 									break;
 							}
 						});
 					}, false);
 
+					//压缩格式转换
+					function convertImage(srcPath, dstPath) {
+						console.log(dstPath);
+						plus.zip.compressImage({
+								src: srcPath,
+								dst: dstPath,
+								quality: 20,
+								overwrite: true,
+								format: 'jpg'
+							},
+							function(zip) {
+								console.log(zip.size, zip.target);
+								console.log("图片压缩成功！");
+								sendMsg(app.MSG_IMAGE, dstPath);						
+							},
+							function(error) {
+								console.log("图片失败!"+error);
+								sendMsg(app.MSG_IMAGE, srcPath);
+							});
+					}
 
 
 					var setSoundAlertVisable = function(show) {

@@ -137,7 +137,11 @@
 				
 				console.log(JSON.stringify(friendList));
 				
-				if(friendList==null)return;
+				if(friendList==null){
+					document.getElementById("contactList").innerHTML ="";
+					return;
+				}
+				
 				// 2. 循环好友列表，转换为拼音
 				for (var i = 0 ; i < friendList.length ; i ++) {
 					var friend = friendList[i];
