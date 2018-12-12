@@ -51,7 +51,9 @@
 		//创建图片预览组件的整体 UI
 		createViewer: function() {
 			var self = this;
-			self.viewer = $.dom("<div class='mui-imageviewer'><div class='mui-imageviewer-mask'></div><div class='mui-imageviewer-header'><i class='mui-icon mui-icon-closeempty mui-imageviewer-close'></i><span class='mui-imageviewer-state'></span></div><i class='mui-icon mui-icon-arrowleft  mui-imageviewer-left'></i><i class='mui-icon mui-icon-arrowright mui-imageviewer-right'></i></div>");
+			self.viewer = $.dom(
+				"<div class='mui-imageviewer'><div class='mui-imageviewer-mask'></div><div class='mui-imageviewer-header'><i class='mui-icon mui-icon-closeempty mui-imageviewer-close'></i><span class='mui-imageviewer-state'></span></div><i class='mui-icon mui-icon-arrowleft  mui-imageviewer-left'></i><i class='mui-icon mui-icon-arrowright mui-imageviewer-right'></i><i class='mui-icon mui-icon mui-icon-pulldown mui-imageviewer-pulldown'></i></div>"
+			);
 			self.viewer = self.viewer[0] || self.viewer;
 			//self.viewer.style.height = screen.height;
 			self.closeButton = self.viewer.querySelector('.mui-imageviewer-close');
@@ -59,6 +61,10 @@
 			self.leftButton = self.viewer.querySelector('.mui-imageviewer-left');
 			self.rightButton = self.viewer.querySelector('.mui-imageviewer-right');
 			self.mask = self.viewer.querySelector('.mui-imageviewer-mask');
+
+			//下载按钮
+			self.pulldown = self.viewer.querySelector('.mui-imageviewer-pulldown');
+
 			document.body.appendChild(self.viewer);
 		},
 		//查找所有符合的图片
@@ -68,6 +74,7 @@
 		},
 		//检查图片是否为启动预览的图片
 		checkImage: function(target) {
+			
 			var self = this;
 			if (target.tagName !== 'IMG') return false;
 			return self.images.some(function(image) {
@@ -80,6 +87,9 @@
 			//绑定图片 tap 事件
 			document.addEventListener(enterEventName, function(event) {
 				if (!self.viewer) return;
+			
+				
+
 				var target = event.target;
 				if (!self.checkImage(target)) return;
 				self.viewer.style.display = 'block';
@@ -88,9 +98,13 @@
 				}, 0);
 				self.index = self.images.indexOf(target);
 				self.currentItem = self.createImage(self.index);
+				console.log(JSON.stringify(self));	
+
 			}, false);
-			//关系按钮事件
+			
+			//关闭按钮事件
 			self.closeButton.addEventListener(tapEventName, function(event) {
+				console.log(JSON.stringify(self));	
 				self.viewer.style.opacity = 0;
 				setTimeout(function() {
 					self.viewer.style.display = 'none';
@@ -98,14 +112,21 @@
 				}, 600);
 				event.preventDefault();
 				event.cancelBubble = true;
+				
 			}, false);
 			//处理左右按钮
 			self.leftButton.addEventListener(tapEventName, function() {
 				self.prev();
 			}, false);
+
 			self.rightButton.addEventListener(tapEventName, function() {
 				self.next();
 			}, false);
+			//下载图片
+			self.pulldown.addEventListener(tapEventName, function() {
+				self.pulldownImg();
+			}, false);
+
 			//处理划动
 			self.mask.addEventListener($.EVENT_MOVE, function(event) {
 				event.preventDefault();
@@ -135,6 +156,7 @@
 					self.dragStart = touches[0];
 				}
 			}, false);
+			
 			self.viewer.addEventListener($.EVENT_MOVE, function(event) {
 				var img = self.currentItem.querySelector('img');
 				var touches = event.changedTouches;
@@ -187,6 +209,47 @@
 			}, false);
 			//处理缩放结束
 		},
+
+		//保存图片
+		pulldownImg: function() {
+			var self = this;
+			var tmpimgurl = self.images[self.index].src;
+			if (tmpimgurl != "") {
+
+				console.log("下载中...");
+
+				var dtast = plus.downloader.createDownload(
+					tmpimgurl, {},
+					function(downloadFile, status) {
+						//下载回调函数
+						console.log("status："+status);
+						if (status == 200) {
+							//临时文件
+							var tempFile = downloadFile.filename;
+							
+							//通过相册api保存照片到本地相册
+							plus.gallery.save(tempFile, function(d) {
+								console.log(JSON.stringify(d));
+								
+							
+								app.showToast("保存图片成功:"+d.file, "success","bottom");
+							})
+
+						} else {
+							app.showToast("下载失败，请检查网络。", "error","bottom");
+						}
+					}
+				);
+
+				dtast.start(); 
+				console.log("为什么不下载呢");
+			}
+	
+			//首先要获取链接
+		},
+
+
+
 		//下一张图片
 		next: function() {
 			var self = this;

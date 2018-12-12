@@ -15,7 +15,7 @@
 					<a href="javascript:;">
 						<span class="mui-pull-right mui-icon mui-icon-arrowright" style="line-height: 42px;color: lightgray;margin-left: 3px;">
 						</span>
-						<img id="img_my_face" class="mui-media-object mui-pull-right" src="../css/registLogin/arrow.jpg">
+						<img id="img_my_face" class="mui-media-object mui-pull-right" src="../image/givememoney.png">
 						<div class="mui-media-body" style="line-height: 42px;">
 							头像
 						</div>
@@ -25,7 +25,7 @@
 					<a href="javascript:;">
 						<span class="mui-pull-right mui-icon mui-icon-arrowright" style="color: lightgray; margin-left: 3px;"></span>
 						<span id="span_nickname" class="mui-pull-right" style="color: gray; font-size: 14px;">
-							123456
+							Lemon
 						</span>
 						<div class="mui-media-body">
 							昵称
@@ -38,7 +38,7 @@
 							635775605
 						</span>
 						<div class="mui-media-body">
-							米信号
+							恒毅号
 						</div>
 					</a>
 				</li>
@@ -144,8 +144,10 @@
 					span_username.innerHTML = username;
 					//设置头像
 					if (app.isNotNull(faceImage)) {
-						var img_my_face = document.getElementById("img_my_face");
+						var img_my_face = document.getElementById("img_my_face");						
 						img_my_face.src = app.imgServerUrl + faceImage;
+					}else{
+					
 					}
 
 				}

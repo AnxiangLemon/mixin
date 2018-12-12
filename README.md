@@ -79,13 +79,6 @@ max_allowed_packet=16M
  =========|_|==============|___/=/_/_/_/
  
  
- 
- 
- 
- 
- 
- 
- 
  172.16.10.105
  
 未完成
@@ -218,10 +211,29 @@ fire 比 evalJS 好用
 4.图片消息会被输入框挡住 这个UI样式 小生不会改啊！！！难受;
 5.图像放大之后 点击back键会回到会话主窗口，而真正的应该是关闭图片停留在此会话窗口
 6.默认头像，设置
+7.发送图片 关闭提示框 仅仅发送错误的话就弹toast  因为ajax本来就是异步的.
 
 以上问题目前最主要的就是！切换账户所导致的消息残留和未刷新 socke关闭 明天务必解决！
 
 
+<span class="mui-preview-indicator"></span><span style="position: fixed;background: red;top: 0;color: #fff;height: 25px;line-height: 25px;border-radius: 5px;font-size: 16px;width: 50px;text-align: center;">下载</span>
 
-
+<div class='mui-imageviewer'><div class='mui-imageviewer-mask'></div><div class='mui-imageviewer-header'><i class='mui-icon mui-icon-closeempty mui-imageviewer-close'></i><span class='mui-imageviewer-state'></span></div><i class='mui-icon mui-icon-arrowleft  mui-imageviewer-left'></i><i class='mui-icon mui-icon-arrowright mui-imageviewer-right'></i></div>
 					
+http://103.229.147.196/group1/M00/00/02/Z-WTxFwQfkyATtIkABm3OTU9kFs520.jpg
+
+12-12
+新增预览图片下载功能  需要在模板里面写这个js模板的按钮 然后写css
+重写back事件 需要获取图片预览对象 
+mui.back = function(event) {
+					//先判断 是否是打开了图片预览 没有直接返回有的话就需要关闭图片预览
+					if (document.querySelector(".mui-imageviewer-item")) {
+						imageViewer.viewer.style.opacity = 0;
+						setTimeout(function() {
+							imageViewer.viewer.style.display = 'none';
+							imageViewer.disposeImage(true);
+						}, 600);
+					} else {
+						plus.webview.currentWebview().close();
+					}
+				}

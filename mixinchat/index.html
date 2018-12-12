@@ -11,17 +11,17 @@
 	</head>
 	<body>
 		<header class="mui-bar mui-bar-nav title">
-			<h1 class="mui-title title-color"><b id="mixin_title">米信</b></h1>
+			<h1 class="mui-title title-color"><b id="mixin_title">恒毅聊天</b></h1>
 		</header>
 
 		<nav class="mui-bar mui-bar-tab">
 			<a class="mui-tab-item mui-active" tabindex="0">
 				<span class="mui-icon mui-icon-chatbubble"></span>
-				<span class="mui-tab-label">米信</span>
+				<span class="mui-tab-label">消息</span>
 			</a>
 			<a class="mui-tab-item" tabindex="1">
 				<span class="mui-icon mui-icon-phone"></span>
-				<span class="mui-tab-label">通讯录</span>
+				<span class="mui-tab-label">联系人</span>
 			</a>
 			<a class="mui-tab-item" tabindex="2">
 				<span class="mui-icon mui-icon-paperplane"></span>
@@ -100,7 +100,6 @@
 
 				mui('.mui-bar-tab').on('tap', 'a', function() {
 
-
 					var tabindex = this.getAttribute('tabindex');
 
 					//显示tab选项所对应的页面
@@ -128,11 +127,11 @@
 					if (connectionStatus != 0 && connectionStatus != 1) {
 						// 重新打开网络连接
 						var muxin_title = document.getElementById("mixin_title");
-						muxin_title.innerHTML = "<b>米信</b>";
+						muxin_title.innerHTML = "<b>恒毅聊天</b>";
 					} else {
 						// 关闭网络连接
 						var muxin_title = document.getElementById("mixin_title");
-						muxin_title.innerHTML = "<b>米信(未连接)</b>";
+						muxin_title.innerHTML = "<b>恒毅聊天(未连接)</b>";
 					}
 				});
 			}

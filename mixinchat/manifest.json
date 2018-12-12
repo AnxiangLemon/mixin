@@ -1,12 +1,12 @@
 {
     "@platforms" : [ "android", "iPhone", "iPad" ],
     "id" : "H52505FA0", /*应用的标识，创建应用时自动生成，勿手动修改*/
-    "name" : "mixin", /*应用名称，程序桌面图标名称*/
+    "name" : "恒毅聊天", /*应用名称，程序桌面图标名称*/
     "version" : {
         "name" : "1.0.3", /*应用版本名称*/
-        "code" : "83"
+        "code" : 1
     },
-    "description" : "学习netty案例", /*应用描述信息*/
+    "description" : "一个轻便的聊天工具。", /*应用描述信息*/
     "icons" : {
         "72" : "icon.png"
     },
@@ -118,7 +118,7 @@
                         "spotlight" : "unpackage/res/icons/40x40.png",
                         "spotlight@2x" : "unpackage/res/icons/80x80.png"
                     },
-                    "appstore" : "C:/Users/Administrator/Desktop/1544415901791.png"
+                    "appstore" : "C:/Users/Administrator/Desktop/java/图片/1544415901791.png"
                 },
                 "android" : {
                     "mdpi" : "unpackage/res/icons/48x48.png", /*普通屏程序图标，分辨率：48x48*/

@@ -81,10 +81,14 @@ window.app = {
 	 * @param {Object} msg
 	 * @param {Object} type
 	 */
-	showToast: function(msg, type) {
+	showToast: function(msg, type,align) {
+		if(align==null || align==undefined){
+			align = "center"
+		}
+		
 		plus.nativeUI.toast(msg, {
 			icon: "/image/" + type + ".png",
-			verticalAlign: "center"
+			verticalAlign: align
 		})
 	},
 

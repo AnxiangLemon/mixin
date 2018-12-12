@@ -379,7 +379,7 @@
 				var chatItemHtml = "";
 				var ul_chatSnapshot = document.getElementById("ul_chatSnapshot");
 				ul_chatSnapshot.innerHTML = "";
-				console.log(JSON.stringify(chatSnapshotList));
+//				console.log(JSON.stringify(chatSnapshotList));
 				
 				for (var i = 0; i < chatSnapshotList.length; i++) {
 					var chatItem = chatSnapshotList[i];
@@ -388,7 +388,7 @@
 					var friendId = chatItem.friendId;
 					// 根据friendId从本地联系人列表的缓存中拿到相关信息
 					var friend = app.getFriendFromContactList(friendId);
-					console.log(JSON.stringify(friend));
+//					console.log(JSON.stringify(friend));
 					
 					// 判断消息的已读或未读状态
 					var isRead = chatItem.isRead;

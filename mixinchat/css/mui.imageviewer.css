@@ -121,3 +121,21 @@
 .mui-imageviewer-right:active {
 	color: #fff;
 }
+
+
+.mui-imageviewer-pulldown {
+	position: absolute;
+	z-index: 2;
+	color: #fff;
+	margin-bottom: 20%;
+	right: 10%;	
+	font-size: 30px;
+	border: #C8C7CC solid 1px;
+}
+
+.mui-imageviewer-pulldown:active{
+	color: #aaa;
+}
+.mui-imageviewer-pulldown{
+	bottom: 5px;
+}

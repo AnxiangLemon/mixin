@@ -3,12 +3,11 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
-		<title>米信聊天</title>
+		<title>恒毅聊天</title>
 		<link href="../css/mui.min.css" rel="stylesheet" />
 		<link rel="stylesheet" type="text/css" href="../css/header.css" />
 		<link href="../css/mui.imageviewer.css" rel="stylesheet" />
 		<link rel="stylesheet" type="text/css" href="../css/imchat.css" />
-
 	</head>
 
 	<body contextmenu="return false;">
@@ -25,9 +24,9 @@
 				<div class="msg-item <%= (item.flag == 1 ?' msg-item-self':'') %>" msg-type='<%=(item.type)%>' msg-content='<%=(item.msg)%>' msg-amrLen='<%=(item.amrLen)%>'>
 					<% if(item.flag == 1 ) { %>
 						<!-- <i class="msg-user mui-icon mui-icon-person"></i> -->
-						<img class="msg-user" src="<%=(myImg)%>" alt="" />
+						<img class="msg-user" src="<%=(myImg!=app.imgServerUrl?friendImg:'../image/givememoney.png')%>" alt="" />
 					<% } else { %>
-						<img class="msg-user-img" src="<%=(friendImg)%>" alt="" />
+						<img class="msg-user-img" src="<%=(friendImg!=app.imgServerUrl?friendImg:'../image/givememoney.png')%>" alt="" />
 					<% } %>
 					<div class="msg-content">
 						<div class="msg-content-inner" style="-webkit-user-select:all;">
@@ -38,7 +37,6 @@
 							<% } else if(item.type==app.MSG_SOUND ) { %>	
 								<span class="mui-icon mui-icon-mic" style="font-size: 18px;font-weight: bold;"></span>
 								<span class="play-state"><%=(item.amrLen)%>"</span>
-								
 							<% } %>
 						</div>
 						<div class="msg-content-arrow"></div>
@@ -73,9 +71,11 @@
 			<div class="r-sigh">!</div>
 			<div id="audio_tips" class="rsalert">手指上滑，取消发送</div>
 		</div>
+
 		<script src="../js/mui.min.js"></script>
 		<script src="../js/mui.imageViewer.js"></script>
 		<script src="../js/arttmpl.js"></script>
+
 		<script src="../js/app.js" type="text/javascript" charset="utf-8"></script>
 		<script type="text/javascript" charset="utf-8">
 			// 获取上一个页面传入的好友属性值
@@ -98,6 +98,7 @@
 					}
 				});
 
+
 				//true 表示原样输出html标签  false 表示为HTML代码
 				template.config('escape', false);
 
@@ -115,13 +116,26 @@
 					});
 				}
 
+				//图片预览对象 重写back的时候需要用到此对象	
+				var imageViewer;
+				mui.back = function(event) {
+					//先判断 是否是打开了图片预览 没有直接返回有的话就需要关闭图片预览
+					if (document.querySelector(".mui-imageviewer-item")) {
+						imageViewer.viewer.style.opacity = 0;
+						setTimeout(function() {
+							imageViewer.viewer.style.display = 'none';
+							imageViewer.disposeImage(true);
+						}, 600);
+					} else {
+						plus.webview.currentWebview().close();
+					}
+				}
+
 
 				mui.plusReady(function() {
 					// 获取我自己的用户信息					
 					var me = app.getUserGlobalInfo();
 					console.log(JSON.stringify(me));
-
-
 					// 获取聊天页面webview
 					var chattingWebview = plus.webview.currentWebview();
 					// 设置聊天页面的软键盘样式
@@ -215,9 +229,10 @@
 						}
 					};
 
-					var imageViewer = new mui.ImageViewer('.msg-content-image', {
+					imageViewer = new mui.ImageViewer('.msg-content-image', {
 						dbl: false
 					});
+					//imageViewer.checkImage()
 
 					// 添加自定义事件，刷新好友请求，初始化websocket
 					window.addEventListener("drawMsgList", function() {
@@ -244,11 +259,11 @@
 								msgItemTap(item, event);
 							}, false);
 						});
-						
+
 						//console.log( JSON.stringify(msgItems[msgItems.length-1]));
 						imageViewer.findAllImage();
 						//自动滚动到底部		
-					//	console.log(ui.areaMsgList.scrollTop+"---"+ui.areaMsgList.scrollHeight+"---"+ui.areaMsgList.offsetHeight);
+						//	console.log(ui.areaMsgList.scrollTop+"---"+ui.areaMsgList.scrollHeight+"---"+ui.areaMsgList.offsetHeight);
 						ui.areaMsgList.scrollTop = ui.areaMsgList.scrollHeight + ui.areaMsgList.offsetHeight;
 					};
 
@@ -329,7 +344,7 @@
 					function uploadChatFile(base64Data, extName, msgType) {
 						console.log(base64Data);
 
-						plus.nativeUI.showWaiting("发送中...");
+						//	plus.nativeUI.showWaiting("发送中...");
 
 						//获取全局信息 上传头像
 						//var user = app.getUserGlobalInfo();
@@ -349,7 +364,7 @@
 							},
 							success: function(data) {
 								// 关闭等待框
-								plus.nativeUI.closeWaiting();
+								//	plus.nativeUI.closeWaiting();
 								if (data.status == 200) {
 									console.log(JSON.stringify(data));
 									// 保存聊天历史记录到本地缓存
@@ -361,7 +376,7 @@
 
 									}
 									console.log(new Date().getTime());
-									
+
 									app.saveUserChatSnapshot(me.id, friendUserId, data.data, true, msgType);
 									WSsendMsg(msgType, fileAddr);
 									console.log(new Date().getTime());
@@ -373,7 +388,7 @@
 								plus.nativeUI.closeWaiting();
 								//异常处理；
 								console.log(type);
-								app.showToast("上传异常！", "error");
+								app.showToast("服务异常", "error");
 							}
 						});
 					}
@@ -411,7 +426,7 @@
 						//渲染消息
 						bindMsgList();
 					}
-					
+
 					//发送消息
 					var sendMsg = function(msgtype, msg) {
 						//console.log(sc);
@@ -443,16 +458,16 @@
 								var base64msg = bitmap.toBase64Data();
 								//app.saveUserChatHistory(me.id, me.nickname, friendUserId, base64msg, app.MSG_TEXT, 1);
 								bitmap.clear();
-								
+
 								//通过URL参数获取目录对象或文件对象
 								plus.io.resolveLocalFileSystemURL(msg, function(entry) {
 									entry.remove(function(entry) {
-										console.log("文件删除成功==" +msg);
+										console.log("文件删除成功==" + msg);
 									}, function(e) {
 										console.log("文件删除失败=" + msg);
 									});
 								});
-								
+
 								console.log('加载图片成功');
 								//上传图片信息
 								uploadChatFile(base64msg, extName, app.MSG_IMAGE);
@@ -603,10 +618,10 @@
 							function(zip) {
 								console.log(zip.size, zip.target);
 								console.log("图片压缩成功！");
-								sendMsg(app.MSG_IMAGE, dstPath);						
+								sendMsg(app.MSG_IMAGE, dstPath);
 							},
 							function(error) {
-								console.log("图片失败!"+error);
+								console.log("图片失败!" + error);
 								sendMsg(app.MSG_IMAGE, srcPath);
 							});
 					}
