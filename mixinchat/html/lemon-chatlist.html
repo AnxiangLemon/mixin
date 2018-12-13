@@ -224,7 +224,12 @@
 					var dataContent = JSON.parse(e.data);
 					var action = dataContent.action;
 					if (action === app.PULL_FRIEND) {
+					
 						fetchContactList();
+						//1.加入快照
+						app.saveUserChatSnapshot(dataContent.mixinMsg.senderId, dataContent.mixinMsg.receiverId, "我已经通过你的请求,快来聊一聊吧！", false, app.MSG_TEXT);
+						//2.刷新快照
+						loadingChatSnapshot();
 						return false;
 					}
 
@@ -373,7 +378,7 @@
 			function loadingChatSnapshot() {
 				
 				var user = app.getUserGlobalInfo();
-				console.log(JSON.stringify(user));
+			//	console.log(JSON.stringify(user));
 				var chatSnapshotList = app.getUserChatSnapshot(user.id);
 
 				var chatItemHtml = "";
@@ -512,9 +517,16 @@
 						console.log(myFriendList);
 						//1211 目前服务器 返回的是null
 						app.setContactList(myFriendList);
-
 						// 刷新好友请求记录
 						loadingFriendRequests();
+						//如果是通过好友 则在消息列表新建一个快照 表示已经成为好友了
+						 if( operType==1){
+							 //1.加入快照
+							 app.saveUserChatSnapshot(userId, friendId, "我们已经成为好友了,快来聊一聊吧！", true, app.MSG_TEXT);
+							 //2.刷新快照
+							loadingChatSnapshot();
+						 }
+						
 					}
 				});
 			}

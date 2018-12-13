@@ -24,7 +24,7 @@
 				<div class="msg-item <%= (item.flag == 1 ?' msg-item-self':'') %>" msg-type='<%=(item.type)%>' msg-content='<%=(item.msg)%>' msg-amrLen='<%=(item.amrLen)%>'>
 					<% if(item.flag == 1 ) { %>
 						<!-- <i class="msg-user mui-icon mui-icon-person"></i> -->
-						<img class="msg-user" src="<%=(myImg!=app.imgServerUrl?friendImg:'../image/givememoney.png')%>" alt="" />
+						<img class="msg-user" src="<%=(myImg!=app.imgServerUrl?myImg:'../image/givememoney.png')%>" alt="" />
 					<% } else { %>
 						<img class="msg-user-img" src="<%=(friendImg!=app.imgServerUrl?friendImg:'../image/givememoney.png')%>" alt="" />
 					<% } %>
@@ -33,7 +33,7 @@
 							<% if(item.type==app.MSG_TEXT ) { %>
 								<%=( item.msg|| '&nbsp;&nbsp;') %>
 							<% } else if(item.type==app.MSG_IMAGE ) { %>
-								<img class="msg-content-image" src="<%=(item.msg)%>" style="max-width: 100px;" />
+								<img class="msg-content-image" src="../image/translate.png" data-src="<%=(item.msg)%>" onload="load(this)" style="max-width: 100px;" />
 							<% } else if(item.type==app.MSG_SOUND ) { %>	
 								<span class="mui-icon mui-icon-mic" style="font-size: 18px;font-weight: bold;"></span>
 								<span class="play-state"><%=(item.amrLen)%>"</span>
@@ -75,8 +75,9 @@
 		<script src="../js/mui.min.js"></script>
 		<script src="../js/mui.imageViewer.js"></script>
 		<script src="../js/arttmpl.js"></script>
-
 		<script src="../js/app.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/md5.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/imgload.js" type="text/javascript" charset="utf-8"></script>
 		<script type="text/javascript" charset="utf-8">
 			// 获取上一个页面传入的好友属性值
 			var friendUserId;
@@ -98,6 +99,8 @@
 					}
 				});
 
+
+		
 
 				//true 表示原样输出html标签  false 表示为HTML代码
 				template.config('escape', false);
@@ -251,6 +254,9 @@
 							"myImg": app.imgServerUrl + me.faceImage,
 							"app": app
 						});
+						
+					
+						
 
 						//为每条消息绑定语音事件
 						var msgItems = ui.areaMsgList.querySelectorAll('.msg-item');
@@ -290,7 +296,7 @@
 
 							//把消息放到消息列表中
 							record.push({
-								sender: 'zs',
+								sender: 'lemon',
 								type: app.MSG_TEXT,
 								content: data.text
 							});
@@ -332,8 +338,6 @@
 					//							event.preventDefault();
 					//						}
 					//					});
-
-
 
 					/**
 					 * 文件信息的base64数据
@@ -387,8 +391,9 @@
 							error: function(xhr, type, errorThrown) {
 								plus.nativeUI.closeWaiting();
 								//异常处理；
-								console.log(type);
+								
 								app.showToast("服务异常", "error");
+								console.log(type);
 							}
 						});
 					}

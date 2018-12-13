@@ -3,12 +3,12 @@ window.app = {
 	/**
 	 * netty服务后端发布的url地址
 	 */
-	nettyServerUrl: 'ws://172.16.10.106:7088/ws',
+	nettyServerUrl: 'ws://172.16.10.129:7088/ws',
 
 	/**
 	 * 后端服务发布的url地址
 	 */
-	serverUrl: 'http://172.16.10.106:7080/mixin/',
+	serverUrl: 'http://172.16.10.129:7080/mixin/',
 
 	/**
 	 * 图片服务器的url地址
